@@ -1,0 +1,28 @@
+---
+# Source: audius-creator-node/templates/backend-cm.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: creator-node-backend-cm
+  namespace: default
+data:
+  dbUrl: "postgres://postgres:postgres@creator-node-db-svc.default.svc.cluster.local:5432/audius_creator_node"
+  redisHost: "creator-node-cache-svc.default.svc.cluster.local"
+  redisPort: "6379"
+  ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
+  ipfsPort: "5001"
+  logLevel: "debug"
+
+
+---
+# Source: audius-creator-node/templates/db-cm.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: creator-node-db-cm
+  namespace: default
+data:
+  POSTGRES_DB: audius_creator_node
+  POSTGRES_USER: postgres

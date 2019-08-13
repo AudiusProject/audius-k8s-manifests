@@ -1,0 +1,158 @@
+---
+# Source: audius-creator-node/templates/backend-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creator-node-backend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: creator-node
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: creator-node
+        tier: backend
+      annotations:
+        checksum/config: ed1d4470cb1f14df6394f6795a434ea123f149d7ff4d2ca5589d58a5f46ed5cb
+    spec:
+      containers:
+      - name: backend
+        imagePullPolicy: Always
+        image: audius/creator-node:0.1.0
+        envFrom:
+        - configMapRef:
+            name: creator-node-backend-cm
+        ports:
+        - containerPort: 4000
+        livenessProbe:
+          httpGet:
+            path: /health_check
+            port: 4000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health_check
+            port: 4000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        command: ["sh", "-c", "exec node src/index.js"]
+        volumeMounts:
+        - mountPath: /file_storage
+          name: creator-node-backend-pv
+          subPath: creator-node-backend
+      volumes:
+      - name: creator-node-backend-pv
+        persistentVolumeClaim:
+          claimName: creator-node-backend-pvc
+
+
+---
+# Source: audius-creator-node/templates/cache-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creator-node-cache
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: creator-node
+      tier: cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: creator-node
+        tier: cache
+    spec:
+      containers:
+      - name: creator-node-cache
+        image: redis:5.0.5
+        ports:
+        - containerPort: 6379
+
+
+---
+# Source: audius-creator-node/templates/db-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creator-node-db
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: creator-node
+      tier: db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: creator-node
+        tier: db
+      annotations:
+        checksum/config: e01a08d64268e07f8dda580850604131112a9cfba4e23cafa2811f7da395e265
+    spec:
+      containers:
+      - name: creator-node-db
+        image: postgres:11.4
+        envFrom:
+        - configMapRef:
+            name: creator-node-db-cm
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: creator-node-db-pv
+          subPath: creator-node-db
+      volumes:
+      - name: creator-node-db-pv
+        persistentVolumeClaim:
+          claimName: creator-node-db-pvc
+
+
+---
+# Source: audius-creator-node/templates/ipfs-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creator-node-ipfs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: creator-node
+      tier: ipfs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: creator-node
+        tier: ipfs
+    spec:
+      containers:
+      - name: creator-node-ipfs
+        image: ipfs/go-ipfs:release
+        ports:
+        - name: api
+          containerPort: 5001
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: creator-node-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: creator-node-ipfs
+      volumes:
+      - name: creator-node-ipfs-pv
+        persistentVolumeClaim:
+          claimName: creator-node-ipfs-pvc

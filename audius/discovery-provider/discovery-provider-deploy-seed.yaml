@@ -1,0 +1,138 @@
+---
+# Source: audius-discovery-provider/templates/backend-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-provider-backend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: discovery-provider
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: discovery-provider
+        tier: backend
+      annotations:
+        checksum/config: 5abf3d155f7e9aa230b863ffb87514df9162e78d71147c17dbe0e81bab5567ff
+    spec:
+      containers:
+      - name: server
+        imagePullPolicy: Always
+        image: audius/discovery-provider:0.1.0
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-backend-cm
+        ports:
+        - containerPort: 5000
+        command: ["sh", "-c", "./scripts/prod-server.sh"]
+
+
+---
+# Source: audius-discovery-provider/templates/cache-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-provider-cache
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: discovery-provider
+      tier: cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: discovery-provider
+        tier: cache
+    spec:
+      containers:
+      - name: discovery-provider-cache
+        image: redis:5.0.5
+        ports:
+        - containerPort: 6379
+        command: ["redis-server", "--save", "''"]
+
+
+---
+# Source: audius-discovery-provider/templates/db-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-provider-db
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: discovery-provider
+      tier: db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: discovery-provider
+        tier: db
+      annotations:
+        checksum/config: c10bb38210369f12fa545142336324fbf558d42084c234be5d7bd937541cafb5
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:11.4
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-db-cm
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: discovery-provider-db-pv
+          mountPath: /var/lib/postgresql/data
+          subPath: discovery-provider-db
+      volumes:
+      - name: discovery-provider-db-pv
+        persistentVolumeClaim:
+          claimName: discovery-provider-db-pvc
+
+
+---
+# Source: audius-discovery-provider/templates/ipfs-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-provider-ipfs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: discovery-provider
+      tier: ipfs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: discovery-provider
+        tier: ipfs
+    spec:
+      containers:
+      - name: discovery-provider-ipfs
+        image: ipfs/go-ipfs:release
+        ports:
+        - name: api
+          containerPort: 5001
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: discovery-provider-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: discovery-provider-ipfs
+      volumes:
+      - name: discovery-provider-ipfs-pv
+        persistentVolumeClaim:
+          claimName: discovery-provider-ipfs-pvc

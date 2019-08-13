@@ -1,0 +1,71 @@
+---
+# Source: audius-discovery-provider/templates/backend-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-provider-backend-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5000
+    protocol: TCP
+  selector:
+    release: discovery-provider
+    tier: backend
+  type: NodePort
+
+
+---
+# Source: audius-discovery-provider/templates/cache-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-provider-cache-svc
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+  selector:
+    release: discovery-provider
+    tier: cache
+
+
+---
+# Source: audius-discovery-provider/templates/db-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-provider-db-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+  selector:
+    release: discovery-provider
+    tier: db
+
+
+---
+# Source: audius-discovery-provider/templates/ipfs-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-provider-ipfs-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5001
+    name: api
+    protocol: TCP
+  - port: 8080
+    name: http
+    protocol: TCP
+  selector:
+    release: discovery-provider
+    tier: ipfs

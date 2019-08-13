@@ -1,0 +1,71 @@
+---
+# Source: audius-creator-node/templates/backend-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: creator-node-backend-svc
+  namespace: default
+spec:
+  ports:
+  - port: 4000
+    protocol: TCP
+  selector:
+    release: creator-node
+    tier: backend
+  type: NodePort
+
+
+---
+# Source: audius-creator-node/templates/cache-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: creator-node-cache-svc
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+  selector:
+    release: creator-node
+    tier: cache
+
+
+---
+# Source: audius-creator-node/templates/db-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: creator-node-db-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5432
+    protocol: TCP
+  selector:
+    release: creator-node
+    tier: db
+
+
+---
+# Source: audius-creator-node/templates/ipfs-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: creator-node-ipfs-svc
+  namespace: default
+spec:
+  ports:
+  - port: 5001
+    name: api
+    protocol: TCP
+  - port: 8080
+    name: http
+    protocol: TCP
+  selector:
+    release: creator-node
+    tier: ipfs

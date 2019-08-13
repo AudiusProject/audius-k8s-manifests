@@ -1,0 +1,35 @@
+---
+# Source: audius-discovery-provider/templates/db-seed-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: discovery-provider-db-seed-job
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: pg-restore
+        image: postgres:11.4
+        command: ["sh", "-c", "env PGCONNECT_TIMEOUT=5 pg_restore -h discovery-provider-db-svc.default.svc.cluster.local -p 5432 -U $POSTGRES_USER -d $POSTGRES_DB --no-privileges --no-owner --clean --if-exists /tmp/backup/db.dump"]
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-db-cm
+        volumeMounts:
+        - mountPath: /tmp/backup
+          name: backup
+      initContainers:
+      - name: s3-pull
+        image: "byrnedo/alpine-curl"
+        command: ["sh", "-c", "curl https://audius-pgdump.s3-us-west-2.amazonaws.com/discProvProduction.dump -o /tmp/backup/db.dump"]
+        volumeMounts:
+        - mountPath: /tmp/backup
+          name: backup
+      volumes:
+      - name: backup
+        emptyDir: {}
