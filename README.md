@@ -108,7 +108,7 @@ kubectl apply -f audius/discovery-provider/discovery-provider-deploy-seed.yaml
 Seed discovery provider db (speeds up chain indexing significantly).
 ```
 kubectl apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
-kubectl wait --for=condition=complete --timeout=120s job/discovery-provider-db-seed-job
+kubectl wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
 When seed job completes, re-deploy the stack in **normal mode** to start the workers.
