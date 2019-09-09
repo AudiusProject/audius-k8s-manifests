@@ -1,0 +1,54 @@
+---
+# Source: audius-creator-node/templates/ipfs-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: creator-node-ipfs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: creator-node
+      tier: ipfs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: creator-node
+        tier: ipfs
+      annotations:
+        checksum/config: 69a95e37d9d40b37db00f269318b871a31fb2998002a25656b0badffdc3f4b0c
+    spec:
+      containers:
+      - name: creator-node-ipfs
+        image: ipfs/go-ipfs:release
+        ports:
+        - name: swarm
+          containerPort: 4001
+        - name: api
+          containerPort: 5001
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: creator-node-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: creator-node-ipfs
+      initContainers:
+      - name: init
+        image: ipfs/go-ipfs:release
+        command: ["sh", "/scripts/ipfs-remove-lock.sh"]
+        volumeMounts:
+        - name: creator-node-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: creator-node-ipfs
+        - name: ipfs-cm
+          mountPath: /scripts/ipfs-remove-lock.sh
+          subPath: ipfs-remove-lock.sh
+      volumes:
+      - name: creator-node-ipfs-pv
+        persistentVolumeClaim:
+          claimName: creator-node-ipfs-pvc
+      - name: ipfs-cm
+        configMap:
+          name: creator-node-ipfs-cm

@@ -13,6 +13,8 @@ data:
   ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
   ipfsPort: "5001"
   logLevel: "debug"
+  ipfsClusterIP: "<SEE_README>"
+  ipfsClusterPort: "<SEE_README>"
 
 
 ---
@@ -26,3 +28,29 @@ metadata:
 data:
   POSTGRES_DB: audius_creator_node
   POSTGRES_USER: postgres
+
+
+---
+# Source: audius-creator-node/templates/ipfs-cm.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: creator-node-ipfs-cm
+  namespace: default
+data:
+  ipfs-remove-lock.sh: |
+    #!/bin/sh
+    # when an ipfs upgrade happens, a new pod is created and must be healthy before the old pod can be terminated
+    # thus, the lock mus be released from the current running pod so the new pod can start the ipfs daemon
+    set -e
+    set -x
+    if [ -f /data/ipfs/config ]; then
+      if [ -f /data/ipfs/repo.lock ]; then
+        rm /data/ipfs/repo.lock
+      fi
+      if [ -f /data/ipfs/datastore/LOCK ]; then
+        rm /data/ipfs/datastore/LOCK
+      fi
+      exit 0
+    fi

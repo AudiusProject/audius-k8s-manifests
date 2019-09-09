@@ -1,7 +1,6 @@
 ---
 # Source: audius-creator-node/templates/backend-pvc.yaml
 
-
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -17,7 +16,6 @@ spec:
     path: /var/k8s
   persistentVolumeReclaimPolicy: Retain
 ---
-
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -35,7 +33,6 @@ spec:
 ---
 # Source: audius-creator-node/templates/db-pvc.yaml
 
-
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -51,7 +48,6 @@ spec:
     path: /var/k8s
   persistentVolumeReclaimPolicy: Retain
 ---
-
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -69,7 +65,6 @@ spec:
 ---
 # Source: audius-creator-node/templates/ipfs-pvc.yaml
 
-
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -85,7 +80,6 @@ spec:
     path: /var/k8s
   persistentVolumeReclaimPolicy: Retain
 ---
-
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:

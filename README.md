@@ -63,19 +63,49 @@ kubectl apply -f audius/creator-node/creator-node-svc.yaml
 kubectl apply -f audius/creator-node/creator-node-cm.yaml
 ```
 
-Deploy creator node stack.
+Deploy creator node IPFS.
 ```
-kubectl apply -f audius/creator-node/creator-node-deploy.yaml
+kubectl apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-Get service port.
+Obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
+> NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
 ```
-kubectl get service creator-node-backend-svc
+# IPFS_CLUSTER_IP
+kubectl get node $(kubectl get pod -l release=creator-node,tier=ipfs -o=jsonpath='{.items[0].spec.nodeName}') -o=jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
+
+# IPFS_CLUSTER_PORT
+kubectl get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
+```
+
+Update the creator node config map with the above values.
+```
+kubectl edit cm creator-node-backend-cm
+
+...
+ipfsClusterIP: "<IPFS_CLUSTER_IP>"
+ipfsClusterPort: "<IPFS_CLUSTER_PORT>"
+```
+
+Deploy creator node backend stack.
+```
+kubectl apply -f audius/creator-node/creator-node-deploy-backend.yaml
+```
+
+Configure Firewall. IPFS swarm port and creator node web server port must be accessible.
+> **DO NOT** open the ipfs "api" port.
+```
+# IPFS_CLUSTER_PORT
+kubectl get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
+
+# CREATOR_NODE_PORT
+kubectl get svc creator-node-backend-svc -o=jsonpath='{.spec.ports[0].nodePort}'
 ```
 
 Health check.
 ```
-curl <host>:<svc-port>/health_check
+curl <host>:<CREATOR_NODE_PORT>/health_check
+curl <host>:<CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
 

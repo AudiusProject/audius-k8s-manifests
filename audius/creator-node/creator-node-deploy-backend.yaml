@@ -18,12 +18,12 @@ spec:
         release: creator-node
         tier: backend
       annotations:
-        checksum/config: ed1d4470cb1f14df6394f6795a434ea123f149d7ff4d2ca5589d58a5f46ed5cb
+        checksum/config: 57efa534ad31900fb10a4e7f926220905d7a287a3c861b56f2cbf1af90ed9433
     spec:
       containers:
       - name: backend
         imagePullPolicy: Always
-        image: audius/creator-node:0.1.0
+        image: audius/creator-node:latest-dev
         envFrom:
         - configMapRef:
             name: creator-node-backend-cm
@@ -100,7 +100,7 @@ spec:
         release: creator-node
         tier: db
       annotations:
-        checksum/config: e01a08d64268e07f8dda580850604131112a9cfba4e23cafa2811f7da395e265
+        checksum/config: af1384ab763110e593ca2ef5ba901cc12fd96cccbd9b08511905ed13c981b886
     spec:
       containers:
       - name: creator-node-db
@@ -118,41 +118,3 @@ spec:
       - name: creator-node-db-pv
         persistentVolumeClaim:
           claimName: creator-node-db-pvc
-
-
----
-# Source: audius-creator-node/templates/ipfs-deploy.yaml
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: creator-node-ipfs
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      release: creator-node
-      tier: ipfs
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        release: creator-node
-        tier: ipfs
-    spec:
-      containers:
-      - name: creator-node-ipfs
-        image: ipfs/go-ipfs:release
-        ports:
-        - name: api
-          containerPort: 5001
-        - name: http
-          containerPort: 8080
-        volumeMounts:
-        - name: creator-node-ipfs-pv
-          mountPath: /data/ipfs
-          subPath: creator-node-ipfs
-      volumes:
-      - name: creator-node-ipfs-pv
-        persistentVolumeClaim:
-          claimName: creator-node-ipfs-pvc
