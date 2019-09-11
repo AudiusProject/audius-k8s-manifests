@@ -141,6 +141,8 @@ kubectl apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
 kubectl wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
+If the wait command times out, just run it again - sometimes seeding the DB takes longer than the default timeout.
+
 When seed job completes, re-deploy the stack in **normal mode** to start the workers.
 ```
 kubectl apply -f audius/discovery-provider/discovery-provider-deploy.yaml
