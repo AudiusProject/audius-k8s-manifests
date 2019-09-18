@@ -23,7 +23,7 @@ spec:
       containers:
       - name: backend
         imagePullPolicy: Always
-        image: audius/creator-node:latest-dev
+        image: audius/creator-node:0.1.2
         envFrom:
         - configMapRef:
             name: creator-node-backend-cm
