@@ -23,7 +23,7 @@ spec:
       containers:
       - name: server
         imagePullPolicy: Always
-        image: audius/discovery-provider:0.1.0
+        image: audius/discovery-provider:0.1.1
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
@@ -32,7 +32,7 @@ spec:
         command: ["sh", "-c", "./scripts/prod-server.sh"]
       - name: worker
         imagePullPolicy: Always
-        image: audius/discovery-provider:0.1.0
+        image: audius/discovery-provider:0.1.1
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
@@ -41,7 +41,7 @@ spec:
         command: ["sh", "-c", "celery -A src.worker.celery worker"]
       - name: beat
         imagePullPolicy: Always
-        image: audius/discovery-provider:0.1.0
+        image: audius/discovery-provider:0.1.1
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
