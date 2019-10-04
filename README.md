@@ -18,10 +18,6 @@ Follow the installation notes [here](./cluster-setup.md) to provision a basic a 
 
 Provision a shared host directory for persistent storage.
 
-> **Docker For Mac**<br>
-> Make /var/k8s available in Docker Preferences > File Sharing.<br>
-> Note, due to a macOS bug, you may have to input this path manually rather than using the dropdown file picker.
-
 ```
 mkdir -p /var/k8s
 
@@ -52,44 +48,45 @@ The content is backed by either AWS S3 or a local directory.
 
 #### Run
 
-Deploy persistent storage.
+Install service and volume objects
 ```
-kubectl apply -f audius/creator-node/creator-node-pvc.yaml
-```
-
-Deploy service and config map objects.
-```
-kubectl apply -f audius/creator-node/creator-node-svc.yaml
-kubectl apply -f audius/creator-node/creator-node-cm.yaml
+k apply -f kube/creator-node/creator-node-svc.yaml
+k apply -f kube/creator-node/creator-node-pvc.yaml
 ```
 
-Deploy creator node IPFS.
+Deploy creator node ipfs
 ```
-kubectl apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
+k apply -f kube/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-Obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
+Before deploying creator node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
+
 > NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
+
 ```
 # IPFS_CLUSTER_IP
-kubectl get node $(kubectl get pod -l release=creator-node,tier=ipfs -o=jsonpath='{.items[0].spec.nodeName}') -o=jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
+kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs -o=jsonpath='{.items[0].spec.nodeName}') -o=jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
 
 # IPFS_CLUSTER_PORT
-kubectl get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
+kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
 ```
 
-Update the creator node config map with the above values.
+Update creator node backend config map with the above values
 ```
-kubectl edit cm creator-node-backend-cm
-
+# creator-node-cm.yaml
 ...
-ipfsClusterIP: "<IPFS_CLUSTER_IP>"
-ipfsClusterPort: "<IPFS_CLUSTER_PORT>"
+  ipfsClusterIP: "<ip-from-above>"
+  ipfsClusterPort: "<port-from-above>"
 ```
 
-Deploy creator node backend stack.
+Install updated config map
 ```
-kubectl apply -f audius/creator-node/creator-node-deploy-backend.yaml
+k apply -f kube/creator-node/creator-node-cm.yaml
+```
+
+Deploy creator node backend
+```
+k apply -f kube/creator-node/creator-node-deploy-backend.yaml
 ```
 
 Configure Firewall. IPFS swarm port and creator node web server port must be accessible.
@@ -102,10 +99,10 @@ kubectl get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm
 kubectl get svc creator-node-backend-svc -o=jsonpath='{.spec.ports[0].nodePort}'
 ```
 
-Health check.
+Health check
 ```
-curl <host>:<CREATOR_NODE_PORT>/health_check
-curl <host>:<CREATOR_NODE_PORT>/ipfs_peer_info
+curl <creator-node-dns-address>/health_check
+curl <creator-node-dns-address>/ipfs_peer_info
 ```
 
 
@@ -119,41 +116,35 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 #### Run
 
-Deploy persistent storage.
+Install config map, service and volume objects
 ```
-kubectl apply -f audius/discovery-provider/discovery-provider-pvc.yaml
-```
-
-Deploy service and config map objects.
-```
-kubectl apply -f audius/discovery-provider/discovery-provider-svc.yaml
-kubectl apply -f audius/discovery-provider/discovery-provider-cm.yaml
+k apply -f kube/discovery-provider/discovery-provider-cm.yaml
+k apply -f kube/discovery-provider/discovery-provider-svc.yaml
+k apply -f kube/discovery-provider/discovery-provider-pvc.yaml
 ```
 
-Deploy discovery provider stack in **seed mode**.
+Deploy discovery provider stack, with workers disabled (prepares for db seed)
 ```
-kubectl apply -f audius/discovery-provider/discovery-provider-deploy-seed.yaml
-```
-
-Seed discovery provider db (speeds up chain indexing significantly).
-```
-kubectl apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
-kubectl wait --for=condition=complete job/discovery-provider-db-seed-job
+k apply -f kube/discovery-provider/discovery-provider-deploy-no-workers.yaml
 ```
 
-If the wait command times out, just run it again - sometimes seeding the DB takes longer than the default timeout.
-
-When seed job completes, re-deploy the stack in **normal mode** to start the workers.
+Seed discovery provider db (speeds up chain indexing significantly)
 ```
-kubectl apply -f audius/discovery-provider/discovery-provider-deploy.yaml
+k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
+k wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
-Get service port.
+When seed job completes, start chain indexing workers
+```
+k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
+```
+
+Get service nodePort
 ```
 kubectl get service discovery-provider-backend-svc
 ```
 
-Health check.
+Health check
 ```
-curl <host>:<svc-port>/health_check
+curl <host>:<svc-nodePort>/health_check
 ```

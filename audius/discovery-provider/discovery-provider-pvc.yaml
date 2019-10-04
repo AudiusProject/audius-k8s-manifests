@@ -36,6 +36,7 @@ spec:
 # Source: audius-discovery-provider/templates/ipfs-pvc.yaml
 
 
+
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -64,3 +65,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
+
+
+

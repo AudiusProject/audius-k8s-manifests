@@ -18,33 +18,42 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: 5abf3d155f7e9aa230b863ffb87514df9162e78d71147c17dbe0e81bab5567ff
+        checksum/config: bcd9db2e88af8e9161c9b879dd01fff346ef4b321aea0c5d84efddc8475ba98e
     spec:
       containers:
       - name: server
         imagePullPolicy: Always
+        
         image: audius/discovery-provider:0.1.2
+        
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
+        
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "./scripts/prod-server.sh"]
       - name: worker
         imagePullPolicy: Always
+        
         image: audius/discovery-provider:0.1.2
+        
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
+        
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "celery -A src.worker.celery worker"]
       - name: beat
         imagePullPolicy: Always
+        
         image: audius/discovery-provider:0.1.2
+        
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
+        
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "celery -A src.worker.celery beat"]
@@ -98,7 +107,7 @@ spec:
         release: discovery-provider
         tier: db
       annotations:
-        checksum/config: c10bb38210369f12fa545142336324fbf558d42084c234be5d7bd937541cafb5
+        checksum/config: fa0013b1ddd94b46f279371d89fb6c758acc5c910e5c83a01526f30f46d9e203
     spec:
       containers:
       - name: postgres
@@ -121,6 +130,7 @@ spec:
 ---
 # Source: audius-discovery-provider/templates/ipfs-deploy.yaml
 
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -137,11 +147,16 @@ spec:
       labels:
         release: discovery-provider
         tier: ipfs
+      annotations:
+        checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
     spec:
+      
       containers:
       - name: discovery-provider-ipfs
         image: ipfs/go-ipfs:release
         ports:
+        - name: swarm
+          containerPort: 4001
         - name: api
           containerPort: 5001
         - name: http
@@ -150,7 +165,26 @@ spec:
         - name: discovery-provider-ipfs-pv
           mountPath: /data/ipfs
           subPath: discovery-provider-ipfs
+      initContainers:
+      - name: init
+        image: ipfs/go-ipfs:release
+        command: ["sh", "/scripts/ipfs-remove-lock.sh"]
+        volumeMounts:
+        - name: discovery-provider-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: discovery-provider-ipfs
+        - name: ipfs-cm
+          mountPath: /scripts/ipfs-remove-lock.sh
+          subPath: ipfs-remove-lock.sh
       volumes:
       - name: discovery-provider-ipfs-pv
+        
         persistentVolumeClaim:
           claimName: discovery-provider-ipfs-pvc
+        
+      - name: ipfs-cm
+        configMap:
+          name: discovery-provider-ipfs-cm
+
+
+

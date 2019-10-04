@@ -1,5 +1,30 @@
 ---
+# Source: audius-creator-node/templates/ipfs-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: creator-node-ipfs-cm
+  namespace: default
+data:
+  ipfs-remove-lock.sh: |
+    #!/bin/sh
+    # when an ipfs upgrade happens, a new pod is created and must be healthy before the old pod can be terminated
+    # thus, the lock mus be released from the current running pod so the new pod can start the ipfs daemon
+    set -e
+    set -x
+    if [ -f /data/ipfs/config ]; then
+      if [ -f /data/ipfs/repo.lock ]; then
+        rm /data/ipfs/repo.lock
+      fi
+      if [ -f /data/ipfs/datastore/LOCK ]; then
+        rm /data/ipfs/datastore/LOCK
+      fi
+    fi
+    exit 0
+
+---
 # Source: audius-creator-node/templates/ipfs-deploy.yaml
+
 
 apiVersion: apps/v1
 kind: Deployment
@@ -18,8 +43,9 @@ spec:
         release: creator-node
         tier: ipfs
       annotations:
-        checksum/config: 69a95e37d9d40b37db00f269318b871a31fb2998002a25656b0badffdc3f4b0c
+        checksum/config: a5009ce89593dc1ceef18b84f07a9c0a1994002ca5e6ad8500e54bd74da8bf07
     spec:
+      
       containers:
       - name: creator-node-ipfs
         image: ipfs/go-ipfs:release
@@ -37,7 +63,7 @@ spec:
       initContainers:
       - name: init
         image: ipfs/go-ipfs:release
-        command: ["sh", "/scripts/ipfs-remove-lock.sh"]
+        command: ["sh", "-c", "./scripts/ipfs-remove-lock.sh"]
         volumeMounts:
         - name: creator-node-ipfs-pv
           mountPath: /data/ipfs
@@ -47,8 +73,14 @@ spec:
           subPath: ipfs-remove-lock.sh
       volumes:
       - name: creator-node-ipfs-pv
+        
         persistentVolumeClaim:
           claimName: creator-node-ipfs-pvc
+        
       - name: ipfs-cm
         configMap:
           name: creator-node-ipfs-cm
+          defaultMode: 0755
+
+
+

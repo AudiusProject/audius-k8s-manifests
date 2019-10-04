@@ -62,6 +62,9 @@ spec:
   type: NodePort
   ports:
   - port: 4001
+    
+    nodePort: 31634
+    
     name: swarm
     protocol: TCP
   - port: 5001
@@ -73,3 +76,5 @@ spec:
   selector:
     release: creator-node
     tier: ipfs
+
+

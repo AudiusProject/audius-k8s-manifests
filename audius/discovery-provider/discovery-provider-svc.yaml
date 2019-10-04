@@ -59,7 +59,11 @@ metadata:
   name: discovery-provider-ipfs-svc
   namespace: default
 spec:
+  type: NodePort
   ports:
+  - port: 4001
+    name: swarm
+    protocol: TCP
   - port: 5001
     name: api
     protocol: TCP
@@ -69,3 +73,5 @@ spec:
   selector:
     release: discovery-provider
     tier: ipfs
+
+

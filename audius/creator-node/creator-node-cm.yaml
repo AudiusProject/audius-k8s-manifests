@@ -7,14 +7,23 @@ metadata:
   name: creator-node-backend-cm
   namespace: default
 data:
+  
   dbUrl: "postgres://postgres:postgres@creator-node-db-svc.default.svc.cluster.local:5432/audius_creator_node"
+  
   redisHost: "creator-node-cache-svc.default.svc.cluster.local"
   redisPort: "6379"
   ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
   ipfsPort: "5001"
-  logLevel: "debug"
+  discoveryProviderWhitelist: ""
+  ethNetworkId: "1"
+  ethOwnerWallet: "0xe886a1858d2d368ef8f02c65bdd470396a1ab188"
+  ethProviderUrl: "https://mainnet.infura.io/v3/c569c6faf4f14d15a49d0044e7ddd668"
+  ethRegistryAddress: "0xb2be26Ca062c5D74964921B80DE6cfa28D9A36c0"
+  ethTokenAddress: "0xADEf65C0f6a30Dcb5f88Eb8653BBFe09Bf99864f"
   ipfsClusterIP: "<SEE_README>"
   ipfsClusterPort: "<SEE_README>"
+  logLevel: "debug"
+  spOwnerWallet: "<SEE_README>"
 
 
 ---
@@ -30,27 +39,3 @@ data:
   POSTGRES_USER: postgres
 
 
----
-# Source: audius-creator-node/templates/ipfs-cm.yaml
-
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: creator-node-ipfs-cm
-  namespace: default
-data:
-  ipfs-remove-lock.sh: |
-    #!/bin/sh
-    # when an ipfs upgrade happens, a new pod is created and must be healthy before the old pod can be terminated
-    # thus, the lock mus be released from the current running pod so the new pod can start the ipfs daemon
-    set -e
-    set -x
-    if [ -f /data/ipfs/config ]; then
-      if [ -f /data/ipfs/repo.lock ]; then
-        rm /data/ipfs/repo.lock
-      fi
-      if [ -f /data/ipfs/datastore/LOCK ]; then
-        rm /data/ipfs/datastore/LOCK
-      fi
-      exit 0
-    fi

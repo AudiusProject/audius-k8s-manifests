@@ -1,6 +1,7 @@
 ---
 # Source: audius-creator-node/templates/backend-deploy.yaml
 
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,15 +19,19 @@ spec:
         release: creator-node
         tier: backend
       annotations:
-        checksum/config: 57efa534ad31900fb10a4e7f926220905d7a287a3c861b56f2cbf1af90ed9433
+        checksum/config: cdbe8757c784b29829734aa48fecc2ad3d43e79697f9ae15ee7d96a98eda7c1e
     spec:
+      
       containers:
       - name: backend
         imagePullPolicy: Always
+        
         image: audius/creator-node:0.1.2
+        
         envFrom:
         - configMapRef:
             name: creator-node-backend-cm
+        
         ports:
         - containerPort: 4000
         livenessProbe:
@@ -49,8 +54,11 @@ spec:
           subPath: creator-node-backend
       volumes:
       - name: creator-node-backend-pv
+        
         persistentVolumeClaim:
           claimName: creator-node-backend-pvc
+        
+
 
 
 ---
@@ -118,3 +126,5 @@ spec:
       - name: creator-node-db-pv
         persistentVolumeClaim:
           claimName: creator-node-db-pvc
+
+

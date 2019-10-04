@@ -9,14 +9,17 @@ metadata:
 data:
   audius_ipfs_host: "discovery-provider-ipfs-svc.default.svc.cluster.local"
   audius_ipfs_port: "5001"
-  audius_ipfs_gateway_hosts: "discovery-provider-ipfs-svc.default.svc.cluster.local:8080"
+  
   audius_db_url: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
+  
   audius_redis_url: "redis://discovery-provider-cache-svc.default.svc.cluster.local:6379/00"
   audius_contracts_registry: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
   audius_cors_allow_all: "true"
   audius_discprov_blacklist_block_processing_window: "1200"
   audius_discprov_block_processing_window: "100"
+  audius_discprov_identity_service_url: "https://identityservice.audius.co"
   audius_discprov_start_block: "0xa7cac7f512e8ce7bdeeeaa636b66795ac75ac104ba7d77ef79be9e8d0d7794f3"
+  audius_discprov_user_metadata_service_url: "https://usermetadata.audius.co"
   audius_web3_host: "core.poa.network"
   audius_web3_port: "443"
 
@@ -32,3 +35,29 @@ metadata:
 data:
   POSTGRES_DB: audius_discovery
   POSTGRES_USER: postgres
+
+
+---
+# Source: audius-discovery-provider/templates/ipfs-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: discovery-provider-ipfs-cm
+  namespace: default
+data:
+  ipfs-remove-lock.sh: |
+    #!/bin/sh
+    # when an ipfs upgrade happens, a new pod is created and must be healthy before the old pod can be terminated
+    # thus, the lock mus be released from the current running pod so the new pod can start the ipfs daemon
+    set -e
+    set -x
+    if [ -f /data/ipfs/config ]; then
+      if [ -f /data/ipfs/repo.lock ]; then
+        rm /data/ipfs/repo.lock
+      fi
+      if [ -f /data/ipfs/datastore/LOCK ]; then
+        rm /data/ipfs/datastore/LOCK
+      fi
+      exit 0
+    fi
+
