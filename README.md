@@ -50,13 +50,13 @@ The content is backed by either AWS S3 or a local directory.
 
 Install service and volume objects
 ```
-k apply -f kube/creator-node/creator-node-svc.yaml
-k apply -f kube/creator-node/creator-node-pvc.yaml
+k apply -f audius/creator-node/creator-node-svc.yaml
+k apply -f audius/creator-node/creator-node-pvc.yaml
 ```
 
 Deploy creator node ipfs
 ```
-k apply -f kube/creator-node/creator-node-deploy-ipfs.yaml
+k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
 Before deploying creator node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
@@ -81,12 +81,12 @@ Update creator node backend config map with the above values
 
 Install updated config map
 ```
-k apply -f kube/creator-node/creator-node-cm.yaml
+k apply -f audius/creator-node/creator-node-cm.yaml
 ```
 
 Deploy creator node backend
 ```
-k apply -f kube/creator-node/creator-node-deploy-backend.yaml
+k apply -f audius/creator-node/creator-node-deploy-backend.yaml
 ```
 
 Configure Firewall. IPFS swarm port and creator node web server port must be accessible.
@@ -118,14 +118,14 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 Install config map, service and volume objects
 ```
-k apply -f kube/discovery-provider/discovery-provider-cm.yaml
-k apply -f kube/discovery-provider/discovery-provider-svc.yaml
-k apply -f kube/discovery-provider/discovery-provider-pvc.yaml
+k apply -f audius/discovery-provider/discovery-provider-cm.yaml
+k apply -f audius/discovery-provider/discovery-provider-svc.yaml
+k apply -f audius/discovery-provider/discovery-provider-pvc.yaml
 ```
 
 Deploy discovery provider stack, with workers disabled (prepares for db seed)
 ```
-k apply -f kube/discovery-provider/discovery-provider-deploy-no-workers.yaml
+k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
 ```
 
 Seed discovery provider db (speeds up chain indexing significantly)
