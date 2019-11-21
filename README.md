@@ -148,3 +148,21 @@ Health check
 ```
 curl <host>:<svc-nodePort>/health_check
 ```
+
+## Logs
+
+In order to assist with any debugging. We provide a central logging service that you may publish to.
+
+First, obtain the service provider secrets from your contact at Audius. This contains the required token(s) for logging to function. And apply the secret with..
+
+```
+kubectl apply -f <secret_from_audius>.yaml
+```
+
+Update the logger tags in the fluentd daemonset with your name, so we can identify you. The line you need to modify is here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L205
+
+Now, apply the fluentd logger stack..
+
+```
+kubectl apply -f audius/logger/logger.yaml
+```
