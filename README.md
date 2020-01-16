@@ -1,20 +1,20 @@
 # Audius Service Providers
 
+This guide describes how to run Audius services on a single node Kubernetes cluster. 
+
+### 1. Cluster Setup
+
+Follow the installation notes [here](./cluster-setup.md) to provision a basic a single node cluster.
+
+### 2. Alias k to kubectl (optional)
 Bash completion for Kubernetes is a must. Add the below to your `~/.bash_profile`.
 ```
 alias k=kubectl
 source <(kubectl completion bash | sed s/kubectl/k/g)
 ```
 
-See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`.
 
-
-### Cluster Setup
-
-Follow the installation notes [here](./cluster-setup.md) to provision a basic a single node cluster.
-
-
-### Storage
+### 3. Storage
 
 Provision a shared host directory for persistent storage.
 
@@ -33,7 +33,29 @@ Hence, to nuke all data and start clean be sure to run..
 rm -rf /var/k8s/*
 ```
 
+### 4. Setup Service
 
+See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`.
+
+### 5. Logs
+
+In order to assist with any debugging. We provide a central logging service that you may publish to.
+
+First, obtain the service provider secrets from your contact at Audius. This contains the required token(s) for logging to function. And apply the secret with
+
+```
+kubectl apply -f <secret_from_audius>.yaml
+```
+
+Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
+
+Now, apply the fluentd logger stack..
+
+```
+kubectl apply -f audius/logger/logger.yaml
+```
+
+---
 ## Creator Node
 
 An Audius Creator Node maintains the availability of creators' content on IPFS.
@@ -43,8 +65,6 @@ The content is backed by either AWS S3 or a local directory.
 > **Note**
 > In the future, the service will be extended to handle proxy re-encryption requests from end-user clients
 > and support other storage backends.
-
----
 
 #### Run
 
@@ -101,10 +121,11 @@ kubectl get svc creator-node-backend-svc -o=jsonpath='{.spec.ports[0].nodePort}'
 
 Health check
 ```
-curl <creator-node-dns-address>/health_check
-curl <creator-node-dns-address>/ipfs_peer_info
+curl localhost:<CREATOR_NODE_PORT>/health_check
+curl <CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
+---
 
 ## Discovery Provider
 
@@ -112,7 +133,6 @@ An Audius Discovery Provider indexes the contents of the Audius contracts on the
 The indexed content includes user, track, and album/playlist information along with social features.
 The data is stored for quick access, updated on a regular interval, and made available for clients via a RESTful API.
 
----
 
 #### Run
 
@@ -147,22 +167,4 @@ kubectl get service discovery-provider-backend-svc
 Health check
 ```
 curl <host>:<svc-nodePort>/health_check
-```
-
-## Logs
-
-In order to assist with any debugging. We provide a central logging service that you may publish to.
-
-First, obtain the service provider secrets from your contact at Audius. This contains the required token(s) for logging to function. And apply the secret with..
-
-```
-kubectl apply -f <secret_from_audius>.yaml
-```
-
-Update the logger tags in the fluentd daemonset with your name, so we can identify you. The line you need to modify is here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L205
-
-Now, apply the fluentd logger stack..
-
-```
-kubectl apply -f audius/logger/logger.yaml
 ```
