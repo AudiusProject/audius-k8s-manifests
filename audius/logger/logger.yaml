@@ -177,7 +177,7 @@ subjects:
 ---
 # Source: audius-logger/templates/fluentd-ds.yaml
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: fluentd
@@ -186,6 +186,9 @@ metadata:
     app: fluentd
     tier: logs
 spec:
+  selector:
+    matchLabels:
+      app: fluentd
   template:
     metadata:
       labels:
