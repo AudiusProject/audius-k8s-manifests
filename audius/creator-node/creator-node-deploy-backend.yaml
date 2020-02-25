@@ -12,21 +12,25 @@ spec:
     matchLabels:
       release: creator-node
       tier: backend
+      
   replicas: 1
+  
   template:
     metadata:
       labels:
         release: creator-node
         tier: backend
+        
       annotations:
-        checksum/config: cdbe8757c784b29829734aa48fecc2ad3d43e79697f9ae15ee7d96a98eda7c1e
+        checksum/config: 646d0521edb4535cf8d6a1d89fd3dedbd6226c817be594742973dfa6315a1768
     spec:
+      
       
       containers:
       - name: backend
         imagePullPolicy: Always
         
-        image: audius/creator-node:0.3.0
+        image: audius/creator-node:0.3.1
         
         envFrom:
         - configMapRef:
@@ -47,17 +51,21 @@ spec:
             port: 4000
           initialDelaySeconds: 3
           periodSeconds: 3
+        
         command: ["sh", "-c", "exec node src/index.js"]
+        
         volumeMounts:
         - mountPath: /file_storage
           name: creator-node-backend-pv
           subPath: creator-node-backend
+        
       volumes:
       - name: creator-node-backend-pv
         
         persistentVolumeClaim:
           claimName: creator-node-backend-pvc
         
+      
 
 
 
@@ -81,6 +89,7 @@ spec:
         release: creator-node
         tier: cache
     spec:
+      
       containers:
       - name: creator-node-cache
         image: redis:5.0.5
@@ -102,6 +111,7 @@ spec:
       release: creator-node
       tier: db
   replicas: 1
+  
   template:
     metadata:
       labels:
@@ -110,6 +120,7 @@ spec:
       annotations:
         checksum/config: af1384ab763110e593ca2ef5ba901cc12fd96cccbd9b08511905ed13c981b886
     spec:
+      
       containers:
       - name: creator-node-db
         image: postgres:11.4

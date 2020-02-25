@@ -8,6 +8,8 @@ metadata:
   namespace: kube-system
 data:
   source.conf: |
+    
+
     <source>
       tag audius.js.*
       @type tail
@@ -45,10 +47,10 @@ data:
       @type grep
       <regexp>
         key log_level
-        pattern /^(?:error|fatal)$/
+        pattern /^(?:info|warn|error|fatal)$/
       </regexp>
     </filter>
-
+    
     <source>
       tag audius.py.server.*
       @type tail
@@ -114,14 +116,16 @@ data:
       @type grep
       <regexp>
         key log_level
-        pattern /^(?:error|fatal)$/
+        pattern /^(?:info|warn|error|fatal)$/
       </regexp>
     </filter>
 
+    
     <filter audius.**>
       @type kubernetes_metadata
       @id filter_audius_kube_metadata
     </filter>
+    
 
   fluent-loggly.conf: |
     @include source.conf
@@ -177,7 +181,11 @@ subjects:
 ---
 # Source: audius-logger/templates/fluentd-ds.yaml
 
+
+
 apiVersion: apps/v1
+
+
 kind: DaemonSet
 metadata:
   name: fluentd
@@ -186,9 +194,13 @@ metadata:
     app: fluentd
     tier: logs
 spec:
+  
+  # extra selector needed in apps/v1 to support service providers
   selector:
     matchLabels:
       app: fluentd
+  
+    
   template:
     metadata:
       labels:
@@ -201,6 +213,7 @@ spec:
       - key: node-role.kubernetes.io/master
         effect: NoSchedule
       containers:
+      
       - name: fluentd-loggly
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-loggly
         env:
@@ -227,6 +240,8 @@ spec:
         - name: fluentd-cm
           mountPath: /fluentd/etc/fluent.conf
           subPath: fluent-loggly.conf
+      
+      
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
@@ -238,3 +253,5 @@ spec:
       - name: fluentd-cm
         configMap:
           name: fluentd-cm
+
+

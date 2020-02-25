@@ -18,13 +18,15 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: bcd9db2e88af8e9161c9b879dd01fff346ef4b321aea0c5d84efddc8475ba98e
+        checksum/config: a420f53694efa8bcbd19f738391c2d4b4da4f90dc4c18c2b952d2afaa0568049
     spec:
+      
+      
       containers:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.0
+        image: audius/discovery-provider:0.3.1
         
         envFrom:
         - configMapRef:
@@ -32,11 +34,14 @@ spec:
         
         ports:
         - containerPort: 5000
+        
         command: ["sh", "-c", "./scripts/prod-server.sh"]
+        
+        
       - name: worker
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.0
+        image: audius/discovery-provider:0.3.1
         
         envFrom:
         - configMapRef:
@@ -48,7 +53,7 @@ spec:
       - name: beat
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.0
+        image: audius/discovery-provider:0.3.1
         
         envFrom:
         - configMapRef:
@@ -57,6 +62,7 @@ spec:
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "celery -A src.worker.celery beat"]
+      
 
 
 ---
@@ -79,6 +85,7 @@ spec:
         release: discovery-provider
         tier: cache
     spec:
+      
       containers:
       - name: discovery-provider-cache
         image: redis:5.0.5
@@ -101,6 +108,7 @@ spec:
       release: discovery-provider
       tier: db
   replicas: 1
+  
   template:
     metadata:
       labels:
@@ -141,15 +149,19 @@ spec:
     matchLabels:
       release: discovery-provider
       tier: ipfs
+      
   replicas: 1
+  
   template:
     metadata:
       labels:
         release: discovery-provider
         tier: ipfs
+        
       annotations:
         checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
     spec:
+      
       
       containers:
       - name: discovery-provider-ipfs
