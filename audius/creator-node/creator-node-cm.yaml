@@ -20,8 +20,10 @@ data:
   ethProviderUrl: "https://mainnet.infura.io/v3/c569c6faf4f14d15a49d0044e7ddd668"
   ethRegistryAddress: "0xb2be26Ca062c5D74964921B80DE6cfa28D9A36c0"
   ethTokenAddress: "0xADEf65C0f6a30Dcb5f88Eb8653BBFe09Bf99864f"
+  headersTimeout: "60000"
   ipfsClusterIP: "<SEE_README>"
   ipfsClusterPort: "<SEE_README>"
+  keepAliveTimeout: "5000"
   logLevel: "debug"
   spOwnerWallet: "<SEE_README>"
 
