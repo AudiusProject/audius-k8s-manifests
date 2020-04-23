@@ -52,7 +52,14 @@ spec:
       
       containers:
       - name: creator-node-ipfs
-        image: ipfs/go-ipfs:release
+        image: ipfs/go-ipfs:v0.4.23
+        args: ["daemon", "--migrate=true", "--enable-gc=true"]
+        livenessProbe:
+          httpGet:
+            path: /api/v0/id
+            port: 5001
+          initialDelaySeconds: 3
+          periodSeconds: 3
         ports:
         - name: swarm
           containerPort: 4001
@@ -64,9 +71,10 @@ spec:
         - name: creator-node-ipfs-pv
           mountPath: /data/ipfs
           subPath: creator-node-ipfs
+      restartPolicy: Always
       initContainers:
       - name: init
-        image: ipfs/go-ipfs:release
+        image: ipfs/go-ipfs:v0.4.23
         command: ["sh", "-c", "./scripts/ipfs-remove-lock.sh"]
         volumeMounts:
         - name: creator-node-ipfs-pv
