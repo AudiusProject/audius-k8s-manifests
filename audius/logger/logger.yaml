@@ -96,8 +96,8 @@ data:
       key_name log
       <parse>
         @type regexp
-        # [2019-11-12 22:14:53,545: WARNING/ForkPoolWorker-2] index.py | Retrieving connection info for ...
-        expression /^\[(?<logtime>[^\]]*),[\d+]+: (?<level>[^ ]*)\/[^ ]*\] (?<msg>.*)$/
+        # [2020-05-01 15:39:31,970] {src.tasks.index:494} (INFO) - index.py | update_task | Acquired disc_prov_lock
+        expression /^\[(?<logtime>[^\]]*),[\d+]+] {.*} \((?<level>.*)\) - (?<msg>.*)$/
         time_key logtime
         time_format %Y-%m-%d %H:%M:%S
       </parse>
