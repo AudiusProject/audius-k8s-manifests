@@ -68,18 +68,18 @@ The content is backed by either AWS S3 or a local directory.
 
 #### Run
 
-Install service and volume objects
+1. Install service and volume objects
 ```
 k apply -f audius/creator-node/creator-node-svc.yaml
 k apply -f audius/creator-node/creator-node-pvc.yaml
 ```
 
-Deploy creator node ipfs
+2. Deploy creator node ipfs
 ```
 k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-Before deploying creator node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
+3. Before deploying creator node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
 
 > NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
 
@@ -91,7 +91,7 @@ kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs 
 kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
 ```
 
-Update creator node backend config map with the above values
+4. Update creator node backend config map with the above values
 ```
 # creator-node-cm.yaml
 ...
@@ -99,17 +99,17 @@ Update creator node backend config map with the above values
   ipfsClusterPort: "<port-from-above>"
 ```
 
-Install updated config map
+5. Install updated config map
 ```
 k apply -f audius/creator-node/creator-node-cm.yaml
 ```
 
-Deploy creator node backend
+6. Deploy creator node backend
 ```
 k apply -f audius/creator-node/creator-node-deploy-backend.yaml
 ```
 
-Configure Firewall. IPFS swarm port and creator node web server port must be accessible.
+7. Configure Firewall. IPFS swarm port and creator node web server port must be accessible.
 > **DO NOT** open the ipfs "api" port.
 ```
 # IPFS_CLUSTER_PORT
@@ -119,7 +119,7 @@ kubectl get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm
 kubectl get svc creator-node-backend-svc -o=jsonpath='{.spec.ports[0].nodePort}'
 ```
 
-Health check
+8. Health check
 ```
 curl localhost:<CREATOR_NODE_PORT>/health_check
 curl <CREATOR_NODE_PORT>/ipfs_peer_info
@@ -136,35 +136,35 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 #### Run
 
-Install config map, service and volume objects
+1. Install config map, service and volume objects
 ```
 k apply -f audius/discovery-provider/discovery-provider-cm.yaml
 k apply -f audius/discovery-provider/discovery-provider-svc.yaml
 k apply -f audius/discovery-provider/discovery-provider-pvc.yaml
 ```
 
-Deploy discovery provider stack, with workers disabled (prepares for db seed)
+2. Deploy discovery provider stack, with workers disabled (prepares for db seed)
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
 ```
 
-Seed discovery provider db (speeds up chain indexing significantly)
+3. Seed discovery provider db (speeds up chain indexing significantly)
 ```
 k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
 k wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
-When seed job completes, start chain indexing workers
+4. When seed job completes, start chain indexing workers
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
 ```
 
-Get service nodePort
+5. Get service nodePort
 ```
 kubectl get service discovery-provider-backend-svc
 ```
 
-Health check
+6. Health check
 ```
 curl <host>:<svc-nodePort>/health_check
 ```
