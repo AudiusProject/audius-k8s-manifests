@@ -84,10 +84,10 @@ data:
       key_name log
       <parse>
         @type regexp
-        # {"log":"[2019-11-12 20:04:37 +0000] [9] [DEBUG] Closing connection.\n","stream":"stderr","time":"2019-11-12T20:04:37.088569413Z"}
-        expression /^\[(?<logtime>[^\]]*)\] \[[^ ]*\] \[(?<level>[^ ]*)\] (?<msg>.*)$/
+        # {"log":"[2020-06-17 15:30:43,190] {src.exceptions:24} (ERROR) - Audius-derived exception\n","stream":"stderr","time":"2019-11-12T20:04:37.088569413Z"}
+        expression /^\[(?<logtime>.*)\] {.*} \((?<level>.*)\) - (?<msg>.*)$/
         time_key logtime
-        time_format %Y-%m-%d %H:%M:%S %z
+        time_format %Y-%m-%d %H:%M:%S
       </parse>
     </filter>
 
