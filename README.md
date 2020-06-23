@@ -37,23 +37,9 @@ rm -rf /var/k8s/*
 
 See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`.
 
-### 5. Logs
+### 5. Logger
 
-In order to assist with any debugging. We provide a central logging service that you may publish to.
-
-First, obtain the service provider secrets from your contact at Audius. This contains the required token(s) for logging to function. And apply the secret with
-
-```
-kubectl apply -f <secret_from_audius>.yaml
-```
-
-Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
-
-Now, apply the fluentd logger stack..
-
-```
-kubectl apply -f audius/logger/logger.yaml
-```
+See the [Logger](#logger) section below for instructions on setting up the logger
 
 ---
 ## Creator Node
@@ -125,6 +111,12 @@ curl localhost:<CREATOR_NODE_PORT>/health_check
 curl <CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
+#### Upgrade
+To add/change environment variables, follow steps 4 and 5 in the Run section above.
+
+To upgrade your Creator Node to the newest version, follow steps 6 and 8. Step 7 doesn't usually need to be run, except for the first time.
+
+
 ---
 
 ## Discovery Provider
@@ -167,4 +159,37 @@ kubectl get service discovery-provider-backend-svc
 6. Health check
 ```
 curl <host>:<svc-nodePort>/health_check
+```
+
+#### Upgrade
+To add/change environment variables, edit the filie `audius/discovery-provider/discovery-provider-cm.yaml` and run `k apply -f audius/discovery-provider/discovery-provider-cm.yaml`.
+
+To upgrade your Discovery Provider to the newest version, run the command in step 4.
+
+## Logger
+
+In order to assist with any debugging. We provide a central logging service that you may publish to.
+
+#### Run
+
+First, obtain the service provider secrets from your contact at Audius. This contains the required token(s) for logging to function. And apply the secret with
+
+```
+kubectl apply -f <secret_from_audius>.yaml
+```
+
+Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
+
+Now, apply the fluentd logger stack.
+
+```
+kubectl apply -f audius/logger/logger.yaml
+```
+
+#### Upgrade
+There are two commands to upgrade the logging stack.
+```
+kubectl apply -f audius/logger/logger.yaml
+
+kubectl -n kube-system delete pod $(kubectl -n kube-system get pods | grep "fluentd" | awk '{print $1}')
 ```
