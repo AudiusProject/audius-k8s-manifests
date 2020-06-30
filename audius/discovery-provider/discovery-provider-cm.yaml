@@ -17,6 +17,7 @@ data:
   audius_contracts_registry: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
   audius_cors_allow_all: "true"
   audius_delegate_owner_wallet: ""
+  audius_delegate_private_key: ""
   audius_discprov_blacklist_block_processing_window: "1200"
   audius_discprov_block_processing_window: "100"
   audius_discprov_identity_service_url: "https://identityservice.audius.co"

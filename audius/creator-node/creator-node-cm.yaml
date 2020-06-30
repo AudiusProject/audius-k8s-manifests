@@ -14,6 +14,8 @@ data:
   redisPort: "6379"
   ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
   ipfsPort: "5001"
+  delegateOwnerWallet: "<SEE_README>"
+  delegatePrivateKey: "<SEE_README>"
   discoveryProviderWhitelist: ""
   ethNetworkId: "1"
   ethOwnerWallet: "0xe886a1858d2d368ef8f02c65bdd470396a1ab188"

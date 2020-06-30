@@ -77,12 +77,14 @@ kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs 
 kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
 ```
 
-4. Update creator node backend config map with the above values
+4. Update creator node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki here https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables
 ```
 # creator-node-cm.yaml
 ...
   ipfsClusterIP: "<ip-from-above>"
   ipfsClusterPort: "<port-from-above>"
+  delegateOwnerWallet: "<address>"
+  delegatePrivateKey: "<private key>"
 ```
 
 5. Install updated config map
@@ -127,36 +129,37 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 
 #### Run
+1. Update the `audius/discovery-provider/discovery-provider-cm.yaml` with values for `audius_delegate_owner_wallet` and `audius_delegate_private_key`. See wiki for full list of env vars and descriptions. https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Provider-%E2%80%90-How-to-run#required-environment-variables
 
-1. Install config map, service and volume objects
+2. Install config map, service and volume objects
 ```
 k apply -f audius/discovery-provider/discovery-provider-cm.yaml
 k apply -f audius/discovery-provider/discovery-provider-svc.yaml
 k apply -f audius/discovery-provider/discovery-provider-pvc.yaml
 ```
 
-2. Deploy discovery provider stack, with workers disabled (prepares for db seed)
+3. Deploy discovery provider stack, with workers disabled (prepares for db seed)
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
 ```
 
-3. Seed discovery provider db (speeds up chain indexing significantly)
+4. Seed discovery provider db (speeds up chain indexing significantly)
 ```
 k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
 k wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
-4. When seed job completes, start chain indexing workers
+5. When seed job completes, start chain indexing workers
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
 ```
 
-5. Get service nodePort
+6. Get service nodePort
 ```
 kubectl get service discovery-provider-backend-svc
 ```
 
-6. Health check
+7. Health check
 ```
 curl <host>:<svc-nodePort>/health_check
 ```
