@@ -22,7 +22,7 @@ spec:
         tier: backend
         
       annotations:
-        checksum/config: 646d0521edb4535cf8d6a1d89fd3dedbd6226c817be594742973dfa6315a1768
+        checksum/config: f6ad39167e53548f0047ea38f880263f01e7a12764f7eeff141073c41229f859
     spec:
       
       
@@ -30,7 +30,7 @@ spec:
       - name: backend
         imagePullPolicy: Always
         
-        image: audius/creator-node:0.3.12
+        image: audius/creator-node:0.3.13
         
         envFrom:
         - configMapRef:
@@ -45,6 +45,7 @@ spec:
           initialDelaySeconds: 3
           periodSeconds: 3
           failureThreshold: 3
+          timeoutSeconds: 3
         readinessProbe:
           httpGet:
             path: /health_check
