@@ -14,6 +14,9 @@ data:
   redisPort: "6379"
   ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
   ipfsPort: "5001"
+  dataNetworkId: "99"
+  dataProviderUrl: "https://poa-gateway.audius.co"
+  dataRegistryAddress: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
   delegateOwnerWallet: "<SEE_README>"
   delegatePrivateKey: "<SEE_README>"
   discoveryProviderWhitelist: ""
@@ -27,7 +30,10 @@ data:
   ipfsClusterPort: "<SEE_README>"
   keepAliveTimeout: "5000"
   logLevel: "debug"
+  maxAudioFileSizeBytes: "1000000000"
+  setTimeout: "3600000"
   spOwnerWallet: "<SEE_README>"
+  timeout: "3600000"
 
 
 ---

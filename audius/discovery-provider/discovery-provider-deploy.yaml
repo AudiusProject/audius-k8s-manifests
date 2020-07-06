@@ -18,7 +18,7 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: 9a93961151b11e57a1fe3d94cab19d3561336921820d7ea0872b10c59c4696e5
+        checksum/config: 337a1a0100ca10cd49c8488c36655dc616c1e98b252eb1d58495b35512809044
     spec:
       
       
@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.13
+        image: audius/discovery-provider:0.3.14
         
         envFrom:
         - configMapRef:
@@ -49,7 +49,7 @@ spec:
       - name: worker
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.13
+        image: audius/discovery-provider:0.3.14
         
         envFrom:
         - configMapRef:
@@ -61,7 +61,7 @@ spec:
       - name: beat
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.13
+        image: audius/discovery-provider:0.3.14
         
         envFrom:
         - configMapRef:
