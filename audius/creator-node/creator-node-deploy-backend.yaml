@@ -22,7 +22,7 @@ spec:
         tier: backend
         
       annotations:
-        checksum/config: 4c72ce6a765995ab6b72ed353df454665056ca54b34eaee98845f05ef4d35ab7
+        checksum/config: faa0ee3c7e20058c8fa70e4ce329d996305f4c8e2ec69215e9276b4a45b04354
     spec:
       
       
@@ -30,7 +30,7 @@ spec:
       - name: backend
         imagePullPolicy: Always
         
-        image: audius/creator-node:0.3.15
+        image: audius/creator-node:0.3.16
         
         envFrom:
         - configMapRef:
