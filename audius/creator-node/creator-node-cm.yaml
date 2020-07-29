@@ -26,6 +26,7 @@ data:
   ethRegistryAddress: "0xb2be26Ca062c5D74964921B80DE6cfa28D9A36c0"
   ethTokenAddress: "0xADEf65C0f6a30Dcb5f88Eb8653BBFe09Bf99864f"
   headersTimeout: "60000"
+  identityService: "https://identityservice.audius.co"
   ipfsClusterIP: "<SEE_README>"
   ipfsClusterPort: "<SEE_README>"
   keepAliveTimeout: "5000"
