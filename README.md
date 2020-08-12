@@ -77,7 +77,7 @@ kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs 
 kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
 ```
 
-4. Update creator node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki here https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables
+4. Update creator node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables)
 ```
 # creator-node-cm.yaml
 ...
@@ -114,9 +114,9 @@ curl <CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
 #### Upgrade
-To add/change environment variables, follow steps 4 and 5 in the Run section above.
+For upgrades to the creator node, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
 
-To upgrade your Creator Node to the newest version, follow steps 6 and 8. Step 7 doesn't usually need to be run, except for the first time.
+Then, to upgrade the deployment to the latest version, follow steps 6 and 8. Step 7 doesn't usually need to be run, except for the first time.
 
 
 ---
@@ -165,9 +165,9 @@ curl <host>:<svc-nodePort>/health_check
 ```
 
 #### Upgrade
-To add/change environment variables, edit the filie `audius/discovery-provider/discovery-provider-cm.yaml` and run `k apply -f audius/discovery-provider/discovery-provider-cm.yaml`.
+For upgrades to the discovery provider, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Provider-%E2%80%90-How-to-run#environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
 
-To upgrade your Discovery Provider to the newest version, run the command in step 4.
+Then, to upgrade the deployment to the latest version, run the command in step 5.
 
 ## Logger
 
