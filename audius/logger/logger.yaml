@@ -79,27 +79,13 @@ data:
       </parse>
     </source>
 
-    <filter audius.py.server.**>
+    <filter audius.py.**>
       @type parser
       key_name log
       <parse>
-        @type regexp
-        # {"log":"[2020-06-17 15:30:43,190] {src.exceptions:24} (ERROR) - Audius-derived exception\n","stream":"stderr","time":"2019-11-12T20:04:37.088569413Z"}
-        expression /^\[(?<logtime>.*)\] {.*} \((?<level>.*)\) - (?<msg>.*)$/
-        time_key logtime
-        time_format %Y-%m-%d %H:%M:%S
-      </parse>
-    </filter>
-
-    <filter audius.py.worker.**>
-      @type parser
-      key_name log
-      <parse>
-        @type regexp
-        # [2020-05-01 15:39:31,970] {src.tasks.index:494} (INFO) - index.py | update_task | Acquired disc_prov_lock
-        expression /^\[(?<logtime>[^\]]*),[\d+]+] {.*} \((?<level>.*)\) - (?<msg>.*)$/
-        time_key logtime
-        time_format %Y-%m-%d %H:%M:%S
+        @type json
+        time_key time
+        time_format %Y-%m-%dT%H:%M:%S.%NZ
       </parse>
     </filter>
 
