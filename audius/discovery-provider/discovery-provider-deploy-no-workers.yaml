@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0.3.21
+        image: audius/discovery-provider:0.3.22
         
         envFrom:
         - configMapRef:
@@ -39,9 +39,9 @@ spec:
             path: /health_check
             port: 5000
           initialDelaySeconds: 3
-          periodSeconds: 10
-          failureThreshold: 3
-          timeoutSeconds: 6
+          periodSeconds: 30
+          failureThreshold: 5
+          timeoutSeconds: 15
         
         command: ["sh", "-c", "./scripts/prod-server.sh"]
         
