@@ -14,6 +14,7 @@ data:
   redisPort: "6379"
   ipfsHost: "creator-node-ipfs-svc.default.svc.cluster.local"
   ipfsPort: "5001"
+  creatorNodeEndpoint: "<SEE_README>"
   dataNetworkId: "99"
   dataProviderUrl: "https://poa-gateway.audius.co"
   dataRegistryAddress: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
