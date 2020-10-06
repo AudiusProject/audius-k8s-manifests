@@ -4,7 +4,12 @@ This guide describes how to run Audius services on a single node Kubernetes clus
 
 ### 1. Cluster Setup
 
-Follow the installation notes [here](./cluster-setup.md) to provision a basic a single node cluster.
+A convenience script is also included to do a "one click" node setup. You can run 
+```
+yes | sh setup.sh
+```
+
+However, if the node setup is not successful and kubectl is not available, it's advised to follow the installation steps by hand [here](./cluster-setup.md).
 
 ### 2. Alias k to kubectl (optional)
 Bash completion for Kubernetes is a must. Add the below to your `~/.bash_profile`.
