@@ -26,6 +26,8 @@ data:
   audius_web3_host: "poa-gateway.audius.co"
   audius_web3_port: "443"
 
+  audius_gunicorn_worker_class: "eventlet"
+  audius_gunicorn_workers: 16
 
 ---
 # Source: audius-discovery-provider/templates/db-cm.yaml
