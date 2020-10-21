@@ -18,7 +18,7 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: 337a1a0100ca10cd49c8488c36655dc616c1e98b252eb1d58495b35512809044
+        checksum/config: a02b385408660ca9de44574b00eb4fc77dad7b4d2199304a555b28e30a4ba2c8
     spec:
       
       
@@ -39,9 +39,9 @@ spec:
             path: /health_check
             port: 5000
           initialDelaySeconds: 3
-          periodSeconds: 30
+          periodSeconds: 10
           failureThreshold: 5
-          timeoutSeconds: 15
+          timeoutSeconds: 6
         
         command: ["sh", "-c", "./scripts/prod-server.sh"]
         

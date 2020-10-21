@@ -11,7 +11,7 @@ metadata:
 spec:
   storageClassName: local
   capacity:
-    storage: 10Gi
+    storage: 1700Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -30,7 +30,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 1700Gi
 
 
 
@@ -46,7 +46,7 @@ metadata:
 spec:
   storageClassName: local
   capacity:
-    storage: 1Gi
+    storage: 50Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -65,7 +65,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 1Gi
+      storage: 50Gi
 
 
 ---
@@ -81,7 +81,7 @@ metadata:
 spec:
   storageClassName: local
   capacity:
-    storage: 10Gi
+    storage: 50Gi
   accessModes:
     - ReadWriteOnce
   hostPath:
@@ -100,7 +100,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 50Gi
 
 
 
