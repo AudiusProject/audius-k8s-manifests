@@ -22,7 +22,7 @@ spec:
         tier: backend
         
       annotations:
-        checksum/config: f5599a9a6945deeea6732561f278cad1f1d03ce5b02523f2d0f10f457d50e54f
+        checksum/config: 3e2b4d642a5357ddb27b695e6381a1c0856bcd9a9882922b4c4f6eec6f9c6e38
     spec:
       
       

@@ -1,6 +1,5 @@
 set -x
 
-git clone https://github.com/AudiusProject/audius-k8s-manifests.git
 sudo apt update
 sudo apt dist-upgrade
 

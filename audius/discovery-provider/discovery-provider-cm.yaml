@@ -23,6 +23,8 @@ data:
   audius_discprov_identity_service_url: "https://identityservice.audius.co"
   audius_discprov_start_block: "0xa7cac7f512e8ce7bdeeeaa636b66795ac75ac104ba7d77ef79be9e8d0d7794f3"
   audius_discprov_user_metadata_service_url: "https://usermetadata.audius.co"
+  audius_gunicorn_worker_class: "eventlet"
+  audius_gunicorn_workers: "16"
   audius_web3_host: "poa-gateway.audius.co"
   audius_web3_port: "443"
 
