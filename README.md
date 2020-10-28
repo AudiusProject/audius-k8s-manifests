@@ -129,7 +129,8 @@ Since you've completed all the steps thus far, you're about ready to register! T
 
 `https://<your-service-url>/health_check`
 
-For a Creator Node, one of the fields you should see is spID. If you see an spID > 0, your service is up and healthy.
+For a Creator Node, you should see make sure field `selectedDiscoveryProvider` is not null,
+`creatorNodeEndpoint` is the correct DNS you plan to register on chain and `healthy` is true. If these are all correct, your service is up and healthy.
 
 For a Discovery Provider, if your blockDiff = 0, your service is up and healthy.
 
