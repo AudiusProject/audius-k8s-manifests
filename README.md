@@ -1,10 +1,10 @@
 # Audius Service Providers
 
-This guide describes how to run Audius services on a single node Kubernetes cluster. 
+This guide describes how to run Audius services on a single node Kubernetes cluster. Notes about multi node clusters are given as necessary.
 
 ### 1. Cluster Setup
 
-A convenience script is also included to do a "one click" node setup. You can run 
+A convenience script is also included to do a "one click" kubeadm node setup. You can run 
 ```
 yes | sh setup.sh
 ```
@@ -14,8 +14,11 @@ However, if the node setup is not successful and kubectl is not available, it's 
 ### 2. Alias k to kubectl (optional)
 Bash completion for Kubernetes is a must. Add the below to your `~/.bash_profile`.
 ```
+# alias k to kubectl
 alias k=kubectl
-source <(kubectl completion bash | sed s/kubectl/k/g)
+
+# this command should not throw an error kubernetes is properly configured and aliased
+k get pods
 ```
 
 
@@ -42,7 +45,7 @@ rm -rf /var/k8s/*
 
 See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
 
-Note - the "Creator Node" and "Discovery Provider" have been renamed to "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will use the terms "Creator Node" and "Discovery Node" to refer to them.
+Note - the "Creator Node" and "Discovery Provider" have recently been renamed "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue use the terms "Creator Node" and "Discovery Node" here.
 
 ### 5. Logger
 
@@ -50,7 +53,7 @@ See the [Logger](#logger) section below for instructions on setting up the logge
 
 ### 6. Security & Infrastructure configuration
 
-1. In order for clients to talk to your service, you'll need to expose two ports: the web server port and the IPFS swarm port. In order to find these ports, run `kubectl get svc`. The web server port is mapped to 4000 for creator node and 5000 for discovery provider. The IPFS swarm port is mapped to 4001
+1.) In order for clients to talk to your service, you'll need to expose two ports: the web server port and the IPFS swarm port. In order to find these ports, run `kubectl get svc`. The web server port is mapped to 4000 for creator node and 5000 for discovery provider. The IPFS swarm port is mapped to 4001
 
 ```
 NAME                             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                        AGE
@@ -63,9 +66,9 @@ kubernetes                       ClusterIP   10.96.0.1       <none>        443/T
 In this case, the web server port is 31744 and the IPFS port is 30480.
 ```
 
-2. Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port to port 443. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
+2.) Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port to port 443. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
 
-3. Now we will configure IPFS. 
+3.) Now we will configure IPFS. 
 
 If you are using a multi-node Kubernetes deployment, you'll need to first attach a nodeSelector to the IPFS deployment. In either the [creator node deployment](https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/creator-node/creator-node-deploy-ipfs.yaml) or [discovery provider deployment](https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/discovery-provider/discovery-provider-deploy.yaml) templates, modify the template to add the nodeSelector. See example below
 
@@ -115,9 +118,9 @@ Delete the ipfs pod by running `kubectl delete pod <ipfs pod name>` to restart i
 connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
 ```
 
-4. Set load balancer timeouts. Minimum timeouts for creator node requests are 1 hour (3600 seconds). Track uploads especially for larger files can take several minutes to complete. 
+4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 10 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
 
-5. In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
+5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
 it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't affect additional timeouts that override those from Step 4.
 
 ### 7. Register the service on the dashboard
@@ -126,9 +129,9 @@ Since you've completed all the steps thus far, you're about ready to register! T
 
 `https://<your-service-url>/health_check`
 
-For a creator node, one of the fields you should see is spID. If you see an spID > 0, your service is up and healthy.
+For a Creator Node, one of the fields you should see is spID. If you see an spID > 0, your service is up and healthy.
 
-For a discovery provider, if your blockDiff = 0, your service is up and healthy.
+For a Discovery Provider, if your blockDiff = 0, your service is up and healthy.
 
 After you've verified a healthy response, you can register via the dashboard on https://dashboard.audius.co
 
@@ -146,18 +149,18 @@ The content is backed by either AWS S3 or a local directory.
 
 #### Run
 
-1. Install service and volume objects
+1.) Install service and volume objects
 ```
 k apply -f audius/creator-node/creator-node-svc.yaml
 k apply -f audius/creator-node/creator-node-pvc.yaml
 ```
 
-2. Deploy creator node ipfs
+2.) Deploy Creator Node ipfs
 ```
 k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-3. Before deploying creator node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to creator node.
+3.) Before deploying Creator Node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to Creator Node.
 
 > NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
 
@@ -169,7 +172,7 @@ kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs 
 kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
 ```
 
-4. Update creator node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables)
+4.) Update Creator Node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node-%E2%80%90-How-to-run#required-environment-variables)
 ```
 # creator-node-cm.yaml
 ...
@@ -181,17 +184,17 @@ kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.n
 Note - if you haven't registered the service yet, please enter the url you plan to register in the creatorNodeEndpoint field.
 ```
 
-5. Install updated config map
+5.) Install updated config map
 ```
 k apply -f audius/creator-node/creator-node-cm.yaml
 ```
 
-6. Deploy creator node backend
+6.) Deploy Creator Node backend
 ```
 k apply -f audius/creator-node/creator-node-deploy-backend.yaml
 ```
 
-7. Health check
+7.) Health check
 
 Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 4000 is the port referenced below.
 ```
@@ -200,7 +203,7 @@ curl localhost:<CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
 #### Upgrade
-To upgrade your creator node to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Creator-Node-%E2%80%90-How-to-run#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
+To upgrade your creator node to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node-%E2%80%90-How-to-run#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
 
 Then, to upgrade the deployment to the latest version, follow steps 6 and 8. Step 7 does not usually need to be run, except for the first time.
 
@@ -215,48 +218,48 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 
 #### Run
-1. Update the `audius/discovery-provider/discovery-provider-cm.yaml` with values for `audius_delegate_owner_wallet` and `audius_delegate_private_key`.
+1.) Update the `audius/discovery-provider/discovery-provider-cm.yaml` with values for `audius_delegate_owner_wallet` and `audius_delegate_private_key`.
 
 Note - If you are using an external managed Postgres database (version 11.1+), enter the db url into the `audius_db_url` and the `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars.
 
-See wiki for full list of env vars and descriptions. https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Provider-%E2%80%90-How-to-run#required-environment-variables
+See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node-%E2%80%90-How-to-run#required-environment-variables) for full list of env vars and descriptions.
 
-2. Install config map, service and volume objects
+2.) Install config map, service and volume objects
 ```
 k apply -f audius/discovery-provider/discovery-provider-cm.yaml
 k apply -f audius/discovery-provider/discovery-provider-svc.yaml
 k apply -f audius/discovery-provider/discovery-provider-pvc.yaml
 ```
 
-3. Deploy discovery provider stack, with workers disabled (prepares for db seed)
+3.) Deploy discovery provider stack, with workers disabled (prepares for db seed)
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
 ```
 
-4. Seed discovery provider db (speeds up chain indexing significantly)
+4.) Seed discovery provider db (speeds up chain indexing significantly)
 ```
 k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
 k wait --for=condition=complete job/discovery-provider-db-seed-job
 ```
 
-5. When seed job completes, start chain indexing workers
+5.) When seed job completes, start chain indexing workers
 ```
 k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
 ```
 
-6. Get service nodePort
+6.) Get service nodePort
 ```
 kubectl get service discovery-provider-backend-svc
 ```
 
-7. Health check
+7.) Health check
 Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 5000 is the port referenced below.
 ```
 curl localhost:<DISCOVERY_PORT>/health_check
 ```
 
 #### Upgrade
-To upgrade your discovery provider to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Provider-%E2%80%90-How-to-run#environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
+To upgrade your discovery provider to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node-%E2%80%90-How-to-run#required-environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
 
 Then, to upgrade the deployment to the latest version, run the command in step 5.
 
@@ -279,7 +282,7 @@ First, obtain the service provider secrets from your contact at Audius. This con
 kubectl apply -f <secret_from_audius>.yaml
 ```
 
-Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
+Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name and `<SERVICE_TYPE_ID>` with the type of service and an id like `CREATOR_1` or `DISCOVERY_3` here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
 
 Now, apply the fluentd logger stack.
 
