@@ -141,7 +141,7 @@ After you've verified a healthy response, you can register via the dashboard on 
 
 An Audius Creator Node maintains the availability of creators' content on IPFS.
 The information stored includes Audius user metadata, images, and audio content.
-The content is backed by either AWS S3 or a local directory.
+The content is backed by a local directory.
 
 > **Note**
 > In the future, the service will be extended to handle proxy re-encryption requests from end-user clients
