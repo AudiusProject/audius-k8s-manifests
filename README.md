@@ -1,6 +1,6 @@
 # Audius Service Providers
 
-This guide describes how to run Audius services on a single node Kubernetes cluster. Notes about multi node clusters are given as necessary.
+This guide describes how to run Audius services on a single node Kubernetes cluster. Notes about multi node clusters are given as relevant.
 
 ### 1. Cluster Setup
 
@@ -56,6 +56,8 @@ See the [Logger](#logger) section below for instructions on setting up the logge
 1.) In order for clients to talk to your service, you'll need to expose two ports: the web server port and the IPFS swarm port. In order to find these ports, run `kubectl get svc`. The web server port is mapped to 4000 for creator node and 5000 for discovery provider. The IPFS swarm port is mapped to 4001
 
 ```
+kubectl get svc
+
 NAME                             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                        AGE
 discovery-provider-backend-svc   NodePort    10.98.78.108    <none>        5000:31744/TCP                                 18h
 discovery-provider-cache-svc     ClusterIP   10.101.94.71    <none>        6379/TCP                                       18h
@@ -66,7 +68,7 @@ kubernetes                       ClusterIP   10.96.0.1       <none>        443/T
 In this case, the web server port is 31744 and the IPFS port is 30480.
 ```
 
-2.) Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port to port 443. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
+2.) Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port the DNS and have a domain or subdomain for each service you're running. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
 
 3.) Now we will configure IPFS. 
 
@@ -101,7 +103,7 @@ spec:
         kubernetes.io/hostname: "your host here"
 ```
 
-The last step to configuring IPFS is setting the Announce address. IPFS has some trouble identifying the public host and port inside Kubernetes, so we need to manually set the host and port. This is why we need a node selector. Run the command below to set the Announce address
+IPFS has some trouble identifying the public host and port inside Kubernetes, so we need to manually set the host and port in the public "Announce" address. This is why we need a node selector for multi node kubernetes deployments, to ensure that the IPFS node does not move. Run the command below to set the Announce address
 
 ```
 k exec -it <ipfs pod name> -- ipfs config --json Addresses.Announce '["/ip4/<public ip>/tcp/<public ipfs port 4001>"]'
@@ -283,7 +285,7 @@ First, obtain the service provider secrets from your contact at Audius. This con
 kubectl apply -f <secret_from_audius>.yaml
 ```
 
-Next, update the logger tags in the fluentd daemonset with your name, so we can identify you. Replace `<SERVICE_PROVIDER_NAME>` with your name and `<SERVICE_TYPE_ID>` with the type of service and an id like `CREATOR_1` or `DISCOVERY_3` here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208
+Next, update the logger tags in the fluentd daemonset with your name, so we can identify you and your service uniquely. Replace `<SERVICE_PROVIDER_NAME>` with your name and `<SP_NAME_TYPE_ID>` with the name, type of service and an id like `MY_NAME_CREATOR_1` or `MY_NAME_DISCOVERY_3` here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208. This allows our logging service to filter logs by service provider and by service provider and service
 
 Now, apply the fluentd logger stack.
 
