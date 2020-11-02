@@ -125,16 +125,31 @@ connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
 it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't affect additional timeouts that override those from Step 4.
 
-### 7. Register the service on the dashboard
+### 7. Pre-registration checks
 
-Since you've completed all the steps thus far, you're about ready to register! The last step is to hit the health check for your node via the DNS. 
+Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
-`https://<your-service-url>/health_check`
+The `sp-validation/` folder contains scripts that test the health of services. Run `npm install` to install all the necessary npm dependencies.
+
+#### Creator Node
+In `sp-validation/` folder, export the env vars `delegatePrivateKey` (delegate private key that you have exposed in the `creator-node-cm.yaml` file. eg `5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc`) and
+`creatorNodeEndpoint` (the base url of your service. Must be https. eg. `https://creatornode.domain.com`).
+
+Run `npm run test-creator-node` to run the tests.
+#### Discovery Provider
+
+In `sp-validation`, export the env var `discoveryProviderEndpoint` (the base url of your service. Must be https. eg. `https://discoveryprovider.domain.com`)
+
+Run `npm run test-discovery-provider` to run the tests.
+
+### 8. Register the service on the dashboard
+
+Since you've completed all the steps thus far, you're about ready to register!
 
 For a Creator Node, you should see make sure field `selectedDiscoveryProvider` is not null,
 `creatorNodeEndpoint` is the correct DNS you plan to register on chain and `healthy` is true. If these are all correct, your service is up and healthy.
 
-For a Discovery Provider, if your blockDiff = 0, your service is up and healthy.
+For a Discovery Provider, if your block_difference = 0, your service is up and healthy.
 
 After you've verified a healthy response, you can register via the dashboard on https://dashboard.audius.co
 
