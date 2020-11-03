@@ -120,10 +120,10 @@ Delete the ipfs pod by running `kubectl delete pod <ipfs pod name>` to restart i
 connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
 ```
 
-4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 10 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
+4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 1 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
 
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
-it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't affect additional timeouts that override those from Step 4.
+it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't add or override the timeouts from Step 4.
 
 ### 7. Pre-registration checks
 
@@ -132,15 +132,27 @@ Before registering a service to the dashboard we need to make sure the service i
 The `sp-validation/` folder contains scripts that test the health of services. Run `npm install` to install all the necessary npm dependencies.
 
 #### Creator Node
-In `sp-validation/` folder, export the env vars `delegatePrivateKey` (delegate private key that you have exposed in the `creator-node-cm.yaml` file. eg `5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc`) and
-`creatorNodeEndpoint` (the base url of your service. Must be https. eg. `https://creatornode.domain.com`).
 
-Run `npm run test-creator-node` to run the tests.
+```
+# in the sp-validation/ folder, run the following commands
+➜  sp-validation ✗ export creatorNodeEndpoint=https://creatornode.domain.com
+
+# the delegatePrivateKey is the same private key that was exposed in `creator-node-cm.yaml`
+➜  sp-validation ✗ export delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc
+
+# the following command runs the tests
+➜  sp-validation ✗ npm run test-creator-node
+```
+
 #### Discovery Provider
 
-In `sp-validation`, export the env var `discoveryProviderEndpoint` (the base url of your service. Must be https. eg. `https://discoveryprovider.domain.com`)
+```
+# in the sp-validation/ folder, run the following commands
+➜  sp-validation ✗ export discoveryProviderEndpoint=https://discoveryprovider.domain.com
 
-Run `npm run test-discovery-provider` to run the tests.
+# the following command runs the tests
+➜  sp-validation ✗ npm run test-discovery-provider
+```
 
 ### 8. Register the service on the dashboard
 
