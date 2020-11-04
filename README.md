@@ -129,24 +129,24 @@ it's recommended that your server or load balancer is protected from DoS attacks
 
 Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
-The `sp-validation/` folder contains scripts that test the health of services. Run `npm install` to install all the necessary npm dependencies.
+The `sp-actions/` folder contains scripts that test the health of services. Run `npm install` to install all the necessary npm dependencies. For more information about the that project see [Service Provider Utilities & Actions](#service-provider-utilities-actions)
 
 #### Creator Node
 
-```
-# in the sp-validation/ folder, run the following commands
-➜  sp-validation ✗ export creatorNodeEndpoint=https://creatornode.domain.com
+```bash
+# in the sp-actions/ folder, run the following commands
+➜  sp-actions ✗ export creatorNodeEndpoint=https://creatornode.domain.com
 
 # the delegatePrivateKey is the same private key that was exposed in `creator-node-cm.yaml`
-➜  sp-validation ✗ export delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc
+➜  sp-actions ✗ export delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc
 
 # the following command runs the tests
-➜  sp-validation ✗ npm run test-creator-node
+➜  sp-actions ✗ npm run test-creator-node
 ```
 
 #### Discovery Provider
 
-```
+```bash
 # in the sp-validation/ folder, run the following commands
 ➜  sp-validation ✗ export discoveryProviderEndpoint=https://discoveryprovider.domain.com
 
@@ -160,8 +160,9 @@ Since you've completed all the steps thus far, you're about ready to register!
 
 You can register via the dashboard on https://dashboard.audius.co
 
-
 ---
+
+
 ## Creator Node
 
 An Audius Creator Node maintains the availability of creators' content on IPFS.
@@ -326,3 +327,14 @@ kubectl -n kube-system delete pod $(kubectl -n kube-system get pods | grep "flue
 ### Next
 
 Once you've finished setting up the logger, continue to the [security](#6-security) section.
+
+---
+
+## Service Provider Utilities & Actions
+
+In the `sp-utilities` folder is a project that includes a set of common scripts and utilities to manage services. There's two sub-folders, one for `creator-node` and one for `discovery-provider`. 
+
+This helps monitor and manage your service like perform health checks and delist content. A README is given in the folder for more information about usage.
+
+
+---

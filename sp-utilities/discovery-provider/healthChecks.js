@@ -38,9 +38,10 @@ async function run () {
   }
   try {
     await healthCheck()
+    console.log("All checks passed!")
     process.exit(0)
   } catch (e) {
-    console.error(`Error running script because of error: ${e.message}`)
+    console.error(`Error running script: ${e.message}`)
     process.exit(1)
   }
 }

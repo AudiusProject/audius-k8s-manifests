@@ -1,12 +1,8 @@
 {
-  "name": "sp-validation",
+  "name": "sp-actions",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test-creator-node": "node creator-node/healthChecks",
-    "test-discovery-provider": "node discovery-provider/healthChecks"
-  },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
