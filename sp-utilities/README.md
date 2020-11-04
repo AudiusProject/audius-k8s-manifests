@@ -4,7 +4,7 @@ This project is a set of common scripts and utilities to manage services. There'
 
 ### creator-node/
 
-`healthChecks.js` - Used for checking health, disk space, db connectivity, load balancer timeouts and other health information about a creator node.
+#### `healthChecks.js` - Used for checking health, disk space, db connectivity, load balancer timeouts and other health information about a creator node.
 
 To run this script, go to the sp-utilities/creator-node/ folder and run the command
 
@@ -27,7 +27,7 @@ If you see the message "Error running script" this script did not finish success
 
 ---
 
-`delistContent.js` - Used to delist content on your node by track or user.
+#### `delistContent.js` - Used to delist content from your node by track or user id.
 
 The script takes three parameters
 `node delistContent.js <add|remove> <track|user> <id>`
@@ -50,11 +50,14 @@ The third parameter is the id of the user or track to delist.
 ### discovery-provider
 
 
-`healthChecks.js` - Used for checking health and indexing progress for your discovery provider.
+#### `healthChecks.js` - Used for checking health and indexing progress for your discovery provider.
 
 Usage
 
 ```bash
+➜ pwd
+/Audius/audius-k8s-manifests/sp-utilities/discovery-provider
+
 ➜ discoveryProviderEndpoint=https://discoveryprovider.domain.co node healthChecks.js
 ✓ Health check passed
 All checks passed!

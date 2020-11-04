@@ -334,4 +334,4 @@ kubectl -n kube-system delete pod $(kubectl -n kube-system get pods | grep "flue
 
 ### Next
 
-Once you've finished setting up the logger, continue to the [security](#6-security) section.
+Once you've finished setting up the logger, continue to the [security](#6-security-infrastructure-configuration) section.
