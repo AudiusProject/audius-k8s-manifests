@@ -120,26 +120,57 @@ Delete the ipfs pod by running `kubectl delete pod <ipfs pod name>` to restart i
 connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
 ```
 
-4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 10 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
+4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 1 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
 
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
-it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't affect additional timeouts that override those from Step 4.
+it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't override the timeouts from Step 4.
 
-### 7. Register the service on the dashboard
+### 7. Pre-registration checks
 
-Since you've completed all the steps thus far, you're about ready to register! The last step is to hit the health check for your node via the DNS. 
+Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
-`https://<your-service-url>/health_check`
+The `sp-actions/` folder contains scripts that test the health of services. Run the corresponding checks for your service type below to verify your service is correctly sete up. Be sure to run `npm install` in `sp-actions/` to install all depdencies.
 
-For a Creator Node, you should see make sure field `selectedDiscoveryProvider` is not null,
-`creatorNodeEndpoint` is the correct DNS you plan to register on chain and `healthy` is true. If these are all correct, your service is up and healthy.
+For more information about `sp-actions/` see the README in the [sp-actions/ folder](https://github.com/AudiusProject/audius-k8s-manifests/tree/master/sp-utilities)
 
-For a Discovery Provider, if your blockDiff = 0, your service is up and healthy.
+#### Creator Node
 
-After you've verified a healthy response, you can register via the dashboard on https://dashboard.audius.co
+```bash
+➜ pwd
+/Audius/audius-k8s-manifests/sp-utilities/creator-node
 
+# entering creatorNodeEndpoint and delegatePrivateKey sends those values as env vars to the script without having to export to your terminal
+➜ creatorNodeEndpoint=https://creatornode.domain.co delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc node healthChecks.js
+Starting tests now. This may take a few minutes.
+✓ Health check passed
+✓ DB health check passed
+✓ Heartbeat duration health check passed
+! Non-heartbeat duration health check timed out at 180 seconds with error message: "Request failed with status code 504". This is not an issue.
+All checks passed!
+
+```
+
+If you see the message "Error running script" this script did not finish successfully. If you see "All checks passed!" this script finished successfully.
+
+#### Discovery Provider
+
+```bash
+➜ discoveryProviderEndpoint=https://discoveryprovider.domain.co node healthChecks.js
+✓ Health check passed
+All checks passed!
+```
+
+If you see the message "Error running script" this script did not finish successfully. If you see "All checks passed!" this script finished successfully.
+
+### 8. Register the service on the dashboard
+
+Since you've completed all the steps thus far, you're about ready to register!
+
+You can register via the dashboard on https://dashboard.audius.co
 
 ---
+
+
 ## Creator Node
 
 An Audius Creator Node maintains the availability of creators' content on IPFS.
