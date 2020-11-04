@@ -123,36 +123,44 @@ connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
 4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 1 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
 
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
-it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't add or override the timeouts from Step 4.
+it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't override the timeouts from Step 4.
 
 ### 7. Pre-registration checks
 
 Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
-The `sp-actions/` folder contains scripts that test the health of services. Run `npm install` to install all the necessary npm dependencies. For more information about the that project see [Service Provider Utilities & Actions](#service-provider-utilities-actions)
+The `sp-actions/` folder contains scripts that test the health of services. Run the corresponding checks for your service type below to verify your service is correctly sete up. Be sure to run `npm install` in `sp-actions/` to install all depdencies.
+
+For more information about `sp-actions/` see the README in the [sp-actions/ folder](https://github.com/AudiusProject/audius-k8s-manifests/tree/master/sp-utilities)
 
 #### Creator Node
 
 ```bash
-# in the sp-actions/ folder, run the following commands
-➜  sp-actions ✗ export creatorNodeEndpoint=https://creatornode.domain.com
+➜ pwd
+/Audius/audius-k8s-manifests/sp-utilities/creator-node
 
-# the delegatePrivateKey is the same private key that was exposed in `creator-node-cm.yaml`
-➜  sp-actions ✗ export delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc
+# entering creatorNodeEndpoint and delegatePrivateKey sends those values as env vars to the script without having to export to your terminal
+➜ creatorNodeEndpoint=https://creatornode.domain.co delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc node healthChecks.js
+Starting tests now. This may take a few minutes.
+✓ Health check passed
+✓ DB health check passed
+✓ Heartbeat duration health check passed
+! Non-heartbeat duration health check timed out at 180 seconds with error message: "Request failed with status code 504". This is not an issue.
+All checks passed!
 
-# the following command runs the tests
-➜  sp-actions ✗ npm run test-creator-node
 ```
+
+If you see the message "Error running script" this script did not finish successfully. If you see "All checks passed!" this script finished successfully.
 
 #### Discovery Provider
 
 ```bash
-# in the sp-validation/ folder, run the following commands
-➜  sp-validation ✗ export discoveryProviderEndpoint=https://discoveryprovider.domain.com
-
-# the following command runs the tests
-➜  sp-validation ✗ npm run test-discovery-provider
+➜ discoveryProviderEndpoint=https://discoveryprovider.domain.co node healthChecks.js
+✓ Health check passed
+All checks passed!
 ```
+
+If you see the message "Error running script" this script did not finish successfully. If you see "All checks passed!" this script finished successfully.
 
 ### 8. Register the service on the dashboard
 
@@ -327,14 +335,3 @@ kubectl -n kube-system delete pod $(kubectl -n kube-system get pods | grep "flue
 ### Next
 
 Once you've finished setting up the logger, continue to the [security](#6-security) section.
-
----
-
-## Service Provider Utilities & Actions
-
-In the `sp-utilities` folder is a project that includes a set of common scripts and utilities to manage services. There's two sub-folders, one for `creator-node` and one for `discovery-provider`. 
-
-This helps monitor and manage your service like perform health checks and delist content. A README is given in the folder for more information about usage.
-
-
----
