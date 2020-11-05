@@ -166,7 +166,7 @@ If you see the message "Error running script" this script did not finish success
 
 Since you've completed all the steps thus far, you're about ready to register!
 
-You can register via the dashboard on https://dashboard.audius.co
+You can register via the dashboard on https://dashboard.audius.org
 
 ---
 
