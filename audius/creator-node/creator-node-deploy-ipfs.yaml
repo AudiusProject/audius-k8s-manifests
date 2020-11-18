@@ -55,11 +55,12 @@ spec:
         image: ipfs/go-ipfs:v0.4.23
         args: ["daemon", "--migrate=true", "--enable-gc=true"]
         livenessProbe:
-          httpGet:
-            path: /api/v0/id
-            port: 5001
+          exec:
+            command:
+              - ipfs
+              - id
           initialDelaySeconds: 3
-          periodSeconds: 3
+          periodSeconds: 10
         ports:
         - name: swarm
           containerPort: 4001
