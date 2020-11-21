@@ -24,7 +24,7 @@ data:
   discoveryProviderWhitelist: ""
   ethNetworkId: "1"
   ethOwnerWallet: "0xe886a1858d2d368ef8f02c65bdd470396a1ab188"
-  ethProviderUrl: "https://mainnet.infura.io/v3/c569c6faf4f14d15a49d0044e7ddd668"
+  ethProviderUrl: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1"
   ethRegistryAddress: "0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C"
   ethTokenAddress: "0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998"
   headersTimeout: "60000"
