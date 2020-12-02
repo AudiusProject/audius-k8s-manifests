@@ -43,7 +43,7 @@ rm -rf /var/k8s/*
 
 ### 4. Setup Service
 
-See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
+See below for a guide to deploying [Creator Node](#creator-node-1) and [Discovery Provider](#discovery-provider-1) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
 
 Note - the "Creator Node" and "Discovery Provider" have recently been renamed "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue use the terms "Creator Node" and "Discovery Node" here.
 
