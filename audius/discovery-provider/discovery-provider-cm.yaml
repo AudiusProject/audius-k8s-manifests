@@ -26,6 +26,7 @@ data:
   audius_discprov_user_metadata_service_url: "https://usermetadata.audius.co"
   audius_gunicorn_worker_class: "eventlet"
   audius_gunicorn_workers: "16"
+  audius_web3_eth_provider_url: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1"
   audius_web3_host: "poa-gateway.audius.co"
   audius_web3_port: "443"
 

@@ -43,7 +43,7 @@ rm -rf /var/k8s/*
 
 ### 4. Setup Service
 
-See below for a guide to deploying [Creator Node](#creator-node) and [Discovery Provider](#discovery-provider) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
+See below for a guide to deploying [Creator Node](#creator-node-1) and [Discovery Provider](#discovery-provider-1) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
 
 Note - the "Creator Node" and "Discovery Provider" have recently been renamed "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue use the terms "Creator Node" and "Discovery Node" here.
 
@@ -316,9 +316,24 @@ First, obtain the service provider secrets from your contact at Audius. This con
 kubectl apply -f <secret_from_audius>.yaml
 ```
 
-Next, update the logger tags in the fluentd daemonset with your name, so we can identify you and your service uniquely. Replace `<SERVICE_PROVIDER_NAME>` with your name and `<SP_NAME_TYPE_ID>` with the name, type of service and an id like `MY_NAME_CREATOR_1` or `MY_NAME_DISCOVERY_3` here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L208. This allows our logging service to filter logs by service provider and by service provider and service
+Next, update the logger tags in the fluentd daemonset with your name, so we can identify you and your service uniquely here: https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/logger/logger.yaml#L207. This allows our logging service to filter logs by service provider and by service provider and service. `SP_NAME` refers to your organization's name and `SP_NAME_TYPE_ID` refers to your organization's name plus the type of service you're running, plus an id to distinguish multiple services of the same type.
 
-Now, apply the fluentd logger stack.
+For example, if your name is `Awesome Operator` and you're running a content node, set the tags as:
+```
+...
+env:
+- name: LOGGLY_TAGS
+  value: external,Awesome-Operator,Awesome-Operator-Content-1
+```
+The number at the end of the last tag (`Awesome-Operator-Content-1`) is used if you have more than one content node or discovery node, so you can identify each service uniquely. For example, if you run two content nodes, on your second content node, you can set the tags as:
+```
+...
+env:
+- name: LOGGLY_TAGS
+  value: external,Awesome-Operator,Awesome-Operator-Content-2
+```
+
+Once you've updated the tags, apply the fluentd logger stack with the command:
 
 ```
 kubectl apply -f audius/logger/logger.yaml
