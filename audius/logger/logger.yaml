@@ -204,7 +204,7 @@ spec:
         image: fluent/fluentd-kubernetes-daemonset:v1-debian-loggly
         env:
         - name: LOGGLY_TAGS
-          value: external,<SERVICE_PROVIDER_NAME>,<SP_NAME_TYPE_ID>
+          value: external,<SP_NAME>,<SP_NAME_TYPE_ID>
         envFrom:
         - secretRef:
             name: fluentd-secrets-service-providers
