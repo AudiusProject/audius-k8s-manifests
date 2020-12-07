@@ -24,6 +24,7 @@ data:
   audius_discprov_notifications_max_block_diff: "10"
   audius_discprov_start_block: "0xa7cac7f512e8ce7bdeeeaa636b66795ac75ac104ba7d77ef79be9e8d0d7794f3"
   audius_discprov_user_metadata_service_url: "https://usermetadata.audius.co"
+  audius_eth_contracts_registry: "0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C"
   audius_gunicorn_worker_class: "eventlet"
   audius_gunicorn_workers: "16"
   audius_web3_eth_provider_url: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1"
