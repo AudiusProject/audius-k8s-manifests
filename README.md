@@ -199,24 +199,27 @@ k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 > NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
 
 ```
-# IPFS_CLUSTER_IP
-kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs -o=jsonpath='{.items[0].spec.nodeName}') -o=jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
-
-# IPFS_CLUSTER_PORT
-kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
+k get svc creator-node-ipfs-svc --no-headers -o custom-columns=IP:.spec.clusterIP,PORT:.spec.ports[0].nodePort
+```
+will output,
+```
+<ipfs cluster ip> <ipfs cluster port>
 ```
 
 4.) Update Creator Node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node-%E2%80%90-How-to-run#required-environment-variables)
 ```
 # creator-node-cm.yaml
+    creatorNodeEndpoint: "<your service url>"
 ...
-  spOwnerWallet: "<address of wallet that contains audius tokens>
   delegateOwnerWallet: "<address of wallet that contains no tokens but that is registered on chain>"
   delegatePrivateKey: "<private key>"
-  creatorNodeEndpoint: "<your service url>"
-
-Note - if you haven't registered the service yet, please enter the url you plan to register in the creatorNodeEndpoint field.
+...
+  ipfsClusterIP: "<ipfs cluster ip>"
+  ipfsClusterPort: "ipfs cluster port>"
+...
+  spOwnerWallet: "<address of wallet that contains audius tokens>"
 ```
+Note: If you haven't registered the service yet, please enter the URL you plan to register in the creatorNodeEndpoint field.
 
 5.) Install updated config map
 ```
