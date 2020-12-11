@@ -1,12 +1,14 @@
 const axios = require('axios')
 const Web3 = require('web3')
-const web3 = new Web3()
-const { promisify } = require('util')
+const FormData = require('form-data')
 
 const crypto = require('crypto')
 const assert = require('assert')
 
+const { promisify } = require('util')
 const { generateTimestampAndSignature } = require('./apiSigning')
+
+const web3 = new Web3()
 
 const PRIVATE_KEY = process.env.delegatePrivateKey
 const CREATOR_NODE_ENDPOINT = process.env.creatorNodeEndpoint
@@ -42,6 +44,10 @@ async function healthCheck () {
   assert.ok(
     data.signature !== null && data.signature !== undefined,
     `Signature should not be null or undefined`
+  )
+  assert.ok(
+    data.spOwnerWallet !== null && data.spOwnerWallet !== undefined,
+    `spOwnerWallet should not be null or undefined`
   )
   console.log('✓ Health check passed')
 }
@@ -93,8 +99,7 @@ async function healthCheckDurationHeartbeat () {
   try {
     parseEnvVarsAndArgs()
   } catch (e) {
-    console.error(`\nIncorrect script usage: ${e.message}`)
-    console.error(`Script usage: node verifyHealthcheckDuration.js`)
+    console.error(`\nIncorrect usage: ${e.message}`)
     return
   }
 
@@ -128,8 +133,7 @@ async function healthCheckDuration () {
   try {
     parseEnvVarsAndArgs()
   } catch (e) {
-    console.error(`\nIncorrect script usage: ${e.message}`)
-    console.error(`Script usage: node verifyHealthcheckDuration.js`)
+    console.error(`\nIncorrect usage: ${e.message}`)
     return
   }
 
@@ -157,6 +161,52 @@ async function healthCheckDuration () {
   }
 }
 
+// Test the file upload limit
+async function healthCheckFileUpload () {
+  const randomBytes = promisify(crypto.randomBytes)
+  let resp
+
+  try {
+    parseEnvVarsAndArgs()
+  } catch (e) {
+    console.error(`\nIncorrect usage: ${e.message}`)
+    return
+  }
+
+  try {
+    // Generate signature using local key
+    const randomBytesToSign = (await randomBytes(18)).toString()
+    const signedLocalData = generateTimestampAndSignature({ randomBytesToSign }, PRIVATE_KEY)
+    // Add randomBytes to outgoing request parameters
+    const reqParam = signedLocalData
+    reqParam.randomBytes = randomBytesToSign
+
+    let sampleTrack = new FormData()
+    sampleTrack.append('file', (await axios({
+      method: 'get',
+      url: 'https://s3-us-west-1.amazonaws.com/download.audius.co/sp-health-check-files/97mb_music.mp3', // 97 MB
+      responseType: 'stream'
+    })).data)
+
+    let requestConfig = {
+      headers: {
+        ...sampleTrack.getHeaders()
+      },
+      url: `${CREATOR_NODE_ENDPOINT}/health_check/fileupload`,
+      method: 'post',
+      params: reqParam,
+      responseType: 'json',
+      data: sampleTrack,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
+    }
+    resp = await axios(requestConfig)
+    console.log('✓ File upload health check passed')
+  } catch (e) {
+    throw new Error(`File upload health check errored with error message: "${e.message}".`)
+  }
+}
+
 async function run () {
   try {
     parseEnvVarsAndArgs()
@@ -172,6 +222,7 @@ async function run () {
     await healthCheckDisk()
     await healthCheckDurationHeartbeat()
     await healthCheckDuration()
+    await healthCheckFileUpload()
     console.log("All checks passed!")
     process.exit(0)
   } catch (e) {

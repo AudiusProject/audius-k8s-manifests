@@ -194,19 +194,7 @@ k apply -f audius/creator-node/creator-node-pvc.yaml
 k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-3.) Before deploying Creator Node backend, we must obtain IPFS running host IP and service nodePort, so we can pass that config to Creator Node.
-
-> NOTE If you only have an "InternalIP", ensure your cluster node has an externally accessible network interface
-
-```
-# IPFS_CLUSTER_IP
-kubectl get node $(kubectl -n default get pod -l release=creator-node,tier=ipfs -o=jsonpath='{.items[0].spec.nodeName}') -o=jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
-
-# IPFS_CLUSTER_PORT
-kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.name=="swarm")].nodePort}'
-```
-
-4.) Update Creator Node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node-%E2%80%90-How-to-run#required-environment-variables)
+3.) Update Creator Node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables)
 ```
 # creator-node-cm.yaml
 ...
@@ -218,17 +206,17 @@ kubectl -n default get svc creator-node-ipfs-svc -o=jsonpath='{.spec.ports[?(@.n
 Note - if you haven't registered the service yet, please enter the url you plan to register in the creatorNodeEndpoint field.
 ```
 
-5.) Install updated config map
+4.) Install updated config map
 ```
 k apply -f audius/creator-node/creator-node-cm.yaml
 ```
 
-6.) Deploy Creator Node backend
+5.) Deploy Creator Node backend
 ```
 k apply -f audius/creator-node/creator-node-deploy-backend.yaml
 ```
 
-7.) Health check
+6.) Health check
 
 Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 4000 is the port referenced below.
 ```
@@ -237,7 +225,7 @@ curl localhost:<CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
 #### Upgrade
-To upgrade your creator node to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node-%E2%80%90-How-to-run#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
+To upgrade your creator node to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
 
 Then, to upgrade the deployment to the latest version, follow steps 6 and 8. Step 7 does not usually need to be run, except for the first time.
 
@@ -256,7 +244,7 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 Note - If you are using an external managed Postgres database (version 11.1+), enter the db url into the `audius_db_url` and the `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars.
 
-See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node-%E2%80%90-How-to-run#required-environment-variables) for full list of env vars and descriptions.
+See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables) for full list of env vars and descriptions.
 
 2.) Install config map, service and volume objects
 ```
@@ -293,7 +281,7 @@ curl localhost:<DISCOVERY_PORT>/health_check
 ```
 
 #### Upgrade
-To upgrade your discovery provider to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node-%E2%80%90-How-to-run#required-environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
+To upgrade your discovery provider to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
 
 Then, to upgrade the deployment to the latest version, run the command in step 5.
 

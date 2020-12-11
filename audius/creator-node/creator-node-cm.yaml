@@ -29,8 +29,6 @@ data:
   ethTokenAddress: "0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998"
   headersTimeout: "60000"
   identityService: "https://identityservice.audius.co"
-  ipfsClusterIP: "<SEE_README>"
-  ipfsClusterPort: "<SEE_README>"
   keepAliveTimeout: "5000"
   logLevel: "info"
   maxAudioFileSizeBytes: "1000000000"
