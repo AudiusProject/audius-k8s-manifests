@@ -12,24 +12,39 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-      - name: seed
-        image: postgres:11.4
-        command: ["sh", "-c", "env PGCONNECT_TIMEOUT=5 pg_restore -h discovery-provider-db-svc.default.svc.cluster.local -p 5432 -U postgres -d audius_discovery -n public --no-privileges --no-owner --clean --if-exists /tmp/backup/db.dump"]
-        
-        volumeMounts:
-        - mountPath: /tmp/backup
-          name: backup
+        - name: seed
+          image: postgres:11.4
+          command:
+            [
+              'sh',
+              '-c',
+              'env PGCONNECT_TIMEOUT=5 pg_restore -h discovery-provider-db-svc.default.svc.cluster.local -p 5432 -U postgres -d audius_discovery -n public --no-privileges --no-owner --clean --if-exists /tmp/backup/db.dump',
+            ]
+          # example seed job for managed postgres db url
+          # command:
+          #   [
+          #     'sh',
+          #     '-c',
+          #     'env PGCONNECT_TIMEOUT=5 pg_restore -d 'postgresql://postgres:<postgres_password>@<database_ip>:5432/audius_discovery' -n public --no-privileges --no-owner --clean --if-exists /tmp/backup/db.dump',
+          #   ]
+
+          volumeMounts:
+            - mountPath: /tmp/backup
+              name: backup
       initContainers:
-      - name: init
-        
-        image: "byrnedo/alpine-curl"
-        command: ["sh", "-c", "curl https://audius-pgdump.s3-us-west-2.amazonaws.com/discProvProduction.dump -o /tmp/backup/db.dump"]
-        
-        volumeMounts:
-        - mountPath: /tmp/backup
-          name: backup
+        - name: init
+
+          image: 'byrnedo/alpine-curl'
+          command:
+            [
+              'sh',
+              '-c',
+              'curl https://audius-pgdump.s3-us-west-2.amazonaws.com/discProvProduction.dump -o /tmp/backup/db.dump',
+            ]
+
+          volumeMounts:
+            - mountPath: /tmp/backup
+              name: backup
       volumes:
-      - name: backup
-        emptyDir: {}
-
-
+        - name: backup
+          emptyDir: {}
