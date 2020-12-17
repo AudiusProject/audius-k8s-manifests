@@ -194,7 +194,7 @@ k apply -f audius/creator-node/creator-node-pvc.yaml
 k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 ```
 
-3.) Update Creator Node backend config map with the env vars. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables)
+3.) Update Creator Node backend config map with the env vars. Make sure all required environment variables are exposed. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables)
 ```
 # creator-node-cm.yaml
 ...
@@ -225,9 +225,14 @@ curl localhost:<CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
 #### Upgrade
-To upgrade your creator node to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables). Follow steps 4 and 5 in the Run section above to add and apply environment variables.
 
-Then, to upgrade the deployment to the latest version, follow steps 6 and 8. Step 7 does not usually need to be run, except for the first time.
+To upgrade your service, you will need to pull the latest manifest code. First, `git stash` your local changes to preserve configs. Then run `git pull` to fetch the latest code. Finally run `git stash apply` to re-apply your configs onto the latest code.
+
+Make sure your local configs are present in the `audius/creator-node/creator-node-cm.yaml` file before moving on to the next step.
+
+Now re-run steps 4 and 5 from above to propagate these changes to your service.
+
+Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
 
 
 ---
@@ -244,7 +249,7 @@ The data is stored for quick access, updated on a regular interval, and made ava
 
 Note - If you are using an external managed Postgres database (version 11.1+), enter the db url into the `audius_db_url` and the `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars.
 
-See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables) for full list of env vars and descriptions.
+Make sure that your service exposes all the required environment variables. See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables) for full list of env vars and descriptions.
 
 2.) Install config map, service and volume objects
 ```
@@ -281,9 +286,14 @@ curl localhost:<DISCOVERY_PORT>/health_check
 ```
 
 #### Upgrade
-To upgrade your discovery provider to the latest version, first check that your service exposes all the required environment variables. Full list of required and optional env vars can be found [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables). Edit the file `discovery-provider-cm.yaml` and run the command `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` to apply the environment variables
 
-Then, to upgrade the deployment to the latest version, run the command in step 5.
+To upgrade your service, you will need to pull the latest manifest code. First, `git stash` your local changes to preserve configs. Then run `git pull` to fetch the latest code. Finally run `git stash apply` to re-apply your configs onto the latest code.
+
+Make sure your local configs are present in the `audius/discovery-provider/discovery-provider-cm.yaml` file before moving on to the next step.
+
+Now, re-run `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` and `k apply -f audius/discovery-provider/discovery-provider-deploy.yaml` to apply the changes to your running service.
+
+Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
 
 ### Next
 
