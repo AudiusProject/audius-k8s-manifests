@@ -27,25 +27,61 @@ If you see the message "Error running script" this script did not finish success
 
 ---
 
-#### `delistContent.js` - Used to delist content from your node by track or user id.
+#### `delistContent.js` - Used to delist content from your node by track id(s), user id(s), and/or cid(s)
 
 The script takes three parameters
-`node delistContent.js <add|remove> <track|user> <id>`
+`node delistContent.js -a <add|remove>  -t <track|user|cid> -l <id(s) or cid(s)>`
 
 The first parameter is to either add to the set of delisted content or to remove from the set of delisted content.
 
-The second parameter is type, either track or user.
+The second parameter is type, either track id(s), user id(s), or cid(s).
 
-The third parameter is the id of the user or track to delist.
+The third parameter is the id(s) of the user or track to delist, or track cid(s).
+
+The order of the parameters is not considered. Delisting content might take some time if there is a lot of content. 
 
 ```bash
 ➜ pwd
 /Audius/audius-k8s-manifests/sp-utilities/creator-node
 
 # entering creatorNodeEndpoint and delegatePrivateKey sends those values as env vars to the script without having to export to your terminal
-➜ creatorNodeEndpoint=https://creatornode.domain.co delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc node delistContent.js add track 115
+➜ creatorNodeEndpoint=https://creatornode.domain.co
+➜ delegatePrivateKey=5e468bc1b395e2eb8f3c90ef897406087b0599d139f6ca0060ba85dcc0dce8dc
+➜ discoveryProviderEndpoint=https://discoveryprovider.domain.co
+➜ node delistContent.js -a add -l 1 -t track 
+
+Updating Content Blacklist...
+
+Verifying content against blacklist...
+
+Successfully performed [ADD] for type [TRACK]!
+Values: [1]
+
+➜ node delistContent.js -a remove -l 1 -t track
+
+Updating Content Blacklist...
+
+Verifying content against blacklist...
+
+Successfully performed [REMOVE] for type [TRACK]!
+Values: [1]
 ```
 
+More examples on how to use this script:
+```
+// node delistContent.js -a add -l 1,3,7 -t user
+// node delistContent.js -a add -l 1,3,7 -t track
+// node delistContent.js -a add -l Qm..., Qm..., -t cid
+
+// node delistContent.js -a remove -l 1,3,7 -t user
+// node delistContent.js -a remove -l 1,3,7 -t track
+// node delistContent.js -a remove -l Qm..., Qm..., -t cid
+
+// add -v flag to each command above to see the segments and number of segments touched
+
+// For help:
+// node delistContent.js --help
+```
 
 ### discovery-provider
 
