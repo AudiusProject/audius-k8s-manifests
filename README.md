@@ -247,7 +247,12 @@ The data is stored for quick access, updated on a regular interval, and made ava
 #### Run
 1.) Update the `audius/discovery-provider/discovery-provider-cm.yaml` with values for `audius_delegate_owner_wallet` and `audius_delegate_private_key`.
 
-Note - If you are using an external managed Postgres database (version 11.1+), enter the db url into the `audius_db_url` and the `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars.
+If you are using an external managed Postgres database (version 11.1+), replace the db url at the `audius_db_url` and `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
+
+In the managed postgres database and set the `temp_file_limit` flag to `2147483647` and run the following SQL command on the destination db.
+```
+CREATE EXTENSION pg_trgm;
+```
 
 Make sure that your service exposes all the required environment variables. See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables) for full list of env vars and descriptions.
 
@@ -266,7 +271,7 @@ k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
 4.) Seed discovery provider db (speeds up chain indexing significantly)
 ```
 k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
-k wait --for=condition=complete job/discovery-provider-db-seed-job
+k wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s
 ```
 
 5.) When seed job completes, start chain indexing workers
