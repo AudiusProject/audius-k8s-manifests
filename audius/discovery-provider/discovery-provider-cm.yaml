@@ -12,6 +12,8 @@ data:
   
   audius_db_url: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
   audius_db_url_read_replica: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
+  # example of managed postgres db url
+  # "postgresql://postgres:<postgres_password>@<database_ip>:5432/audius_discovery"
   
   audius_redis_url: "redis://discovery-provider-cache-svc.default.svc.cluster.local:6379/00"
   audius_contracts_registry: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
