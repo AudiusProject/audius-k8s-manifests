@@ -5,51 +5,40 @@ This guide describes how to run Audius services on a single node Kubernetes clus
 ### 1. Cluster Setup
 
 A convenience script is also included to do a "one click" kubeadm node setup. You can run 
-```
+```sh
 yes | sh setup.sh
 ```
 
 However, if the node setup is not successful and kubectl is not available, it's advised to follow the installation steps by hand [here](./cluster-setup.md).
 
-### 2. Alias k to kubectl (optional)
-Bash completion for Kubernetes is a must. Add the below to your `~/.bash_profile`.
-```
-# alias k to kubectl
-alias k=kubectl
+### 2. Storage
 
-# this command should not throw an error kubernetes is properly configured and aliased
-k get pods
-```
-
-
-### 3. Storage
-
-Provision a shared host directory for persistent storage.
-
-```
+Provision a shared host directory for persistent storage,
+```sh
 mkdir -p /var/k8s
+```
 
-# if sudo was required, you will need to change ownership of this dir
+If sudo was required, change ownership with,
+```sh
 sudo chown <user>:<group> /var/k8s
 ```
 
-**NOTE**
+**Note:** Storage will persist on the host even after deleting `pv, pvc` objects.
 
-Storage will persist on the host even after deleting `pv,pvc` objects.<br>
-Hence, to nuke all data and start clean be sure to run..
+To nuke all data and start clean,
 ```
 rm -rf /var/k8s/*
 ```
 
-### 4. Setup Service
+### 3. Setup Service
 
-See below for a guide to deploying [Creator Node](#creator-node-1) and [Discovery Provider](#discovery-provider-1) via `kubectl`. After you finish setting up the service, please continue with the Logger section.
+See below for a guide to deploying [Creator Node](#creator-node-1) and [Discovery Provider](#discovery-provider-1) via `audius-cli`. After you finish setting up the service, please continue with the Logger section.
 
-Note - the "Creator Node" and "Discovery Provider" have recently been renamed "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue use the terms "Creator Node" and "Discovery Node" here.
+**Note:** "Creator Node" and "Discovery Provider" have recently been renamed to "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue to use the terms "Creator Node" and "Discovery Node".
 
 ### 5. Logger
 
-See the [Logger](#logger) section below for instructions on setting up the logger
+See the [Logger](#logger) section below for instructions on setting up the logger.
 
 ### 6. Security & Infrastructure configuration
 
@@ -174,49 +163,30 @@ You can register via the dashboard on https://dashboard.audius.org
 ## Creator Node
 
 An Audius Creator Node maintains the availability of creators' content on IPFS.
-The information stored includes Audius user metadata, images, and audio content.
-The content is backed by a local directory.
 
-> **Note**
-> In the future, the service will be extended to handle proxy re-encryption requests from end-user clients
-> and support other storage backends.
+The information stored includes Audius user metadata, images, and audio content. The content is backed by a local directory.
 
-#### Run
+**Note:** In the future, the service will be extended to handle proxy re-encryption requests from end-user clients and support other storage backends.
 
-1.) Install service and volume objects
-```
-k apply -f audius/creator-node/creator-node-svc.yaml
-k apply -f audius/creator-node/creator-node-pvc.yaml
-```
+### Run
 
-2.) Deploy Creator Node ipfs
-```
-k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
+Use `audius-cli` to update required variables. The full list of variables and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables).
+
+
+Some variables must be set, you can do this with the following commands:
+```sh
+audius-cli set creator-node backend spOwnerWallet <address of wallet that contains audius tokens>
+audius-cli set creator-node backend delegateOwnerWallet <address of wallet that contains no tokens but that is registered on chain>
+audius-cli set creator-node backend delegatePrivateKey <private key>
+audius-cli set creator-node backend creatorNodeEndpoint <your service url>
 ```
 
-3.) Update Creator Node backend config map with the env vars. Make sure all required environment variables are exposed. The  full list of env vars and explanations can be found on the wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Content-Node:-Configuration-Details#required-environment-variables)
-```
-# creator-node-cm.yaml
-...
-  spOwnerWallet: "<address of wallet that contains audius tokens>
-  delegateOwnerWallet: "<address of wallet that contains no tokens but that is registered on chain>"
-  delegatePrivateKey: "<private key>"
-  creatorNodeEndpoint: "<your service url>"
+**Note:** if you haven't registered the service yet, please enter the url you plan to register for `creatorNodeEndpoint`.
 
-Note - if you haven't registered the service yet, please enter the url you plan to register in the creatorNodeEndpoint field.
+Then run the launch command via `audius-cli`
 ```
-
-4.) Install updated config map
+audius-cli launch creator-node
 ```
-k apply -f audius/creator-node/creator-node-cm.yaml
-```
-
-5.) Deploy Creator Node backend
-```
-k apply -f audius/creator-node/creator-node-deploy-backend.yaml
-```
-
-6.) Health check
 
 Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 4000 is the port referenced below.
 ```
@@ -224,13 +194,22 @@ curl localhost:<CREATOR_NODE_PORT>/health_check
 curl localhost:<CREATOR_NODE_PORT>/ipfs_peer_info
 ```
 
-#### Upgrade
+### Upgrade
 
-To upgrade your service, you will need to pull the latest manifest code. First, `git stash` your local changes to preserve configs. Then run `git pull` to fetch the latest code. Finally run `git stash apply` to re-apply your configs onto the latest code.
+To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
+```
+audius-cli pull
+```
 
-Make sure your local configs are present in the `audius/creator-node/creator-node-cm.yaml` file before moving on to the next step.
+Make sure your configs are correct by running,
+```
+audius-cli check creator-node
+```
 
-Now re-run steps 4 and 5 from above to propagate these changes to your service.
+Launch the service by running
+```
+audius-cli launch creator-node
+```
 
 Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
 
@@ -240,14 +219,22 @@ Confirm that the version and gitsha have been updated through the `/health_check
 ## Discovery Provider
 
 An Audius Discovery Provider indexes the contents of the Audius contracts on the Ethereum blockchain for clients to query.
-The indexed content includes user, track, and album/playlist information along with social features.
-The data is stored for quick access, updated on a regular interval, and made available for clients via a RESTful API.
 
+The indexed content includes user, track, and album/playlist information along with social features. The data is stored for quick access, updated on a regular interval, and made available for clients via a RESTful API.
 
-#### Run
-1.) Update the `audius/discovery-provider/discovery-provider-cm.yaml` with values for `audius_delegate_owner_wallet` and `audius_delegate_private_key`.
+### Run
+Some variables must be set, you can do this with the following commands:
+```sh
+audius-cli set discovery-provider backend audius_delegate_owner_wallet <delegate_owner_wallet>
+audius-cli set discovery-provider backend audius_delegate_private_key <delegate_private_key>
+```
 
-If you are using an external managed Postgres database (version 11.1+), replace the db url at the `audius_db_url` and `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
+If you are using an external managed Postgres database (version 11.1+), replace the db url with,
+```sh
+audius-cli set discovery-provider backend audius_db_url <audius_db_url>
+audius-cli set discovery-provider backend audius_db_url_read_replica <audius_db_url_read_replica>
+```
+**Note:** If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
 
 In the managed postgres database and set the `temp_file_limit` flag to `2147483647` and run the following SQL command on the destination db.
 ```
@@ -256,47 +243,32 @@ CREATE EXTENSION pg_trgm;
 
 Make sure that your service exposes all the required environment variables. See wiki [here](https://github.com/AudiusProject/audius-protocol/wiki/Discovery-Node:-Configuration-Details#required-environment-variables) for full list of env vars and descriptions.
 
-2.) Install config map, service and volume objects
-```
-k apply -f audius/discovery-provider/discovery-provider-cm.yaml
-k apply -f audius/discovery-provider/discovery-provider-svc.yaml
-k apply -f audius/discovery-provider/discovery-provider-pvc.yaml
+### Launch
+```sh
+audius-cli launch discovery-provider --seed-job --deploy
 ```
 
-3.) Deploy discovery provider stack, with workers disabled (prepares for db seed)
-```
-k apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml
-```
-
-4.) Seed discovery provider db (speeds up chain indexing significantly)
-```
-k apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml
-k wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s
-```
-
-5.) When seed job completes, start chain indexing workers
-```
-k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
-```
-
-6.) Get service nodePort
-```
-kubectl get service discovery-provider-backend-svc
-```
-
-7.) Health check
 Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 5000 is the port referenced below.
 ```
 curl localhost:<DISCOVERY_PORT>/health_check
 ```
 
-#### Upgrade
+### Upgrade
 
-To upgrade your service, you will need to pull the latest manifest code. First, `git stash` your local changes to preserve configs. Then run `git pull` to fetch the latest code. Finally run `git stash apply` to re-apply your configs onto the latest code.
+To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
+```
+audius-cli pull
+```
 
-Make sure your local configs are present in the `audius/discovery-provider/discovery-provider-cm.yaml` file before moving on to the next step.
+Make sure your configs are correct by running,
+```
+audius-cli check discovery-provider
+```
 
-Now, re-run `k apply -f audius/discovery-provider/discovery-provider-cm.yaml` and `k apply -f audius/discovery-provider/discovery-provider-deploy.yaml` to apply the changes to your running service.
+Launch the service by running
+```
+audius-cli launch discovery-provider
+```
 
 Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
 

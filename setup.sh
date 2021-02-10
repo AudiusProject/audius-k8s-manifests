@@ -34,9 +34,15 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/k8s-manifests/kube-flannel-rbac.yml
 kubectl taint nodes --all node-role.kubernetes.io/master-
 
+# alias kubectl to k
+echo 'alias k=kubectl' >>~/.bashrc
+
 # create directories for persistent storage
 sudo mkdir -p /var/k8s
 sudo chown $(id -u):$(id -g) /var/k8s
+
+# create readlink for audius-cli
+sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
 
 # reboot for good measure
 sudo shutdown -r now
