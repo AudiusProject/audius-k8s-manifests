@@ -17,7 +17,7 @@ Bash completion for Kubernetes is a must. Add the below to your `~/.bash_profile
 # alias k to kubectl
 alias k=kubectl
 
-# this command should not throw an error kubernetes is properly configured and aliased
+# this command should not throw an error if kubernetes is properly configured and aliased
 k get pods
 ```
 
