@@ -93,8 +93,8 @@ def launch_pod(service, pod, deploy, seed_job, manifests_path):
 
     subprocess.run(
         (
-            f"git --git-dir {manifests_path}/.git checkout -- {manifests_path}/audius/discovery-provider/discovery-provider-cm.yaml &&"
-            f"git --git-dir {manifests_path}/.git checkout -- {manifests_path}/audius/creator-node/creator-node-cm.yaml"
+            f"git --git-dir {manifests_path}/.git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
+            f"git --git-dir {manifests_path}/.git checkout -- audius/creator-node/creator-node-cm.yaml"
         ),
         shell=True,
         check=True,
