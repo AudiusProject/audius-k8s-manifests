@@ -224,7 +224,9 @@ def main():
     parser.add_argument(
         "-m",
         "--manifests-path",
-        default=os.getenv("MANIFESTS_PATH", "~/audius-k8s-manifests"),
+        default=os.getenv(
+            "MANIFESTS_PATH", os.path.expanduser("~/audius-k8s-manifests")
+        ),
         help="Path to audius-k8s-manifests",
     )
 
