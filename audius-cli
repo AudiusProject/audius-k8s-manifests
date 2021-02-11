@@ -219,12 +219,12 @@ def apply_config(manifests_path):
 
 def config_ipfs(hostname):
     subprocess.run(
-        f'k exec -it $(k get pods -l tier=ipfs -o json | jq -r \'.items | first.metadata.name\') -- ipfs config --json Addresses.Announce "[\\"/ip4/{hostname}/tcp/$(kubectl get svc -o json | jq \'.items | map(select(.metadata.name | contains("ipfs")).spec.ports) | flatten | map(select(.port == 4001)) | first.nodePort\')\\"]"',
+        f'kubectl exec -it $(kubectl get pods -l tier=ipfs -o json | jq -r \'.items | first.metadata.name\') -- ipfs config --json Addresses.Announce "[\\"/ip4/{hostname}/tcp/$(kubectl get svc -o json | jq \'.items | map(select(.metadata.name | contains("ipfs")).spec.ports) | flatten | map(select(.port == 4001)) | first.nodePort\')\\"]"',
         shell=True,
         check=True,
     )
     subprocess.run(
-        f"k delete pod $(k get pods -l tier=ipfs -o json | jq -r '.items | first.metadata.name')",
+        f"kubectl delete pod $(kubectl get pods -l tier=ipfs -o json | jq -r '.items | first.metadata.name')",
         shell=True,
         check=True,
     )
