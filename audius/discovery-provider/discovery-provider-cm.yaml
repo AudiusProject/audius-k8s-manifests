@@ -7,32 +7,31 @@ metadata:
   name: discovery-provider-backend-cm
   namespace: default
 data:
-  audius_ipfs_host: "discovery-provider-ipfs-svc.default.svc.cluster.local"
-  audius_ipfs_port: "5001"
-  
-  audius_db_url: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
-  audius_db_url_read_replica: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
+  audius_ipfs_host: 'discovery-provider-ipfs-svc.default.svc.cluster.local'
+  audius_ipfs_port: '5001'
+
+  audius_db_url: 'postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery'
+  audius_db_url_read_replica: 'postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery'
   # example of managed postgres db url
   # "postgresql://postgres:<postgres_password>@<database_ip>:5432/audius_discovery"
-  
-  audius_redis_url: "redis://discovery-provider-cache-svc.default.svc.cluster.local:6379/00"
-  audius_contracts_registry: "0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2"
-  audius_cors_allow_all: "true"
-  audius_delegate_owner_wallet: ""
-  audius_delegate_private_key: ""
-  audius_discprov_blacklist_block_processing_window: "1200"
-  audius_discprov_block_processing_window: "100"
-  audius_discprov_identity_service_url: "https://identityservice.audius.co"
-  audius_discprov_notifications_max_block_diff: "10"
-  audius_discprov_start_block: "0xa7cac7f512e8ce7bdeeeaa636b66795ac75ac104ba7d77ef79be9e8d0d7794f3"
-  audius_discprov_user_metadata_service_url: "https://usermetadata.audius.co"
-  audius_eth_contracts_registry: "0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C"
-  audius_gunicorn_worker_class: "eventlet"
-  audius_gunicorn_workers: "16"
-  audius_web3_eth_provider_url: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1"
-  audius_web3_host: "poa-gateway.audius.co"
-  audius_web3_port: "443"
 
+  audius_redis_url: 'redis://discovery-provider-cache-svc.default.svc.cluster.local:6379/00'
+  audius_contracts_registry: '0xC611C82150b56E6e4Ec5973AcAbA8835Dd0d75A2'
+  audius_cors_allow_all: 'true'
+  audius_delegate_owner_wallet: 'abc'
+  audius_delegate_private_key: ''
+  audius_discprov_blacklist_block_processing_window: '1200'
+  audius_discprov_block_processing_window: '100'
+  audius_discprov_identity_service_url: 'https://identityservice.audius.co'
+  audius_discprov_notifications_max_block_diff: '10'
+  audius_discprov_start_block: '0xa7cac7f512e8ce7bdeeeaa636b66795ac75ac104ba7d77ef79be9e8d0d7794f3'
+  audius_discprov_user_metadata_service_url: 'https://usermetadata.audius.co'
+  audius_eth_contracts_registry: '0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C'
+  audius_gunicorn_worker_class: 'eventlet'
+  audius_gunicorn_workers: '16'
+  audius_web3_eth_provider_url: 'https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1'
+  audius_web3_host: 'poa-gateway.audius.co'
+  audius_web3_port: '443'
 
 ---
 # Source: audius-discovery-provider/templates/db-cm.yaml
@@ -45,7 +44,6 @@ metadata:
 data:
   POSTGRES_DB: audius_discovery
   POSTGRES_USER: postgres
-
 
 ---
 # Source: audius-discovery-provider/templates/ipfs-cm.yaml
@@ -70,4 +68,3 @@ data:
       fi
       exit 0
     fi
-
