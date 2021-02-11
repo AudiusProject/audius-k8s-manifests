@@ -26,14 +26,14 @@ def backup(filename, manifests_path):
     for service in ["creator-node", "discovery-provider"]:
         output[service] = {}
 
-        rel_config_map = f"{manifests_path}/audius/{service}/{service}-cm.yaml"
-        abs_config_map = f"audius/{service}/{service}-cm.yaml"
+        config_map = f"{manifests_path}/audius/{service}/{service}-cm.yaml"
 
         proc = subprocess.run(
-            f"git --git-dir {manifests_path}/.git show HEAD:{abs_config_map}",
+            f"git show HEAD:audius/{service}/{service}-cm.yaml",
             capture_output=True,
             shell=True,
             check=True,
+            cwd=manifests_path,
         )
 
         def_config = {
@@ -42,7 +42,7 @@ def backup(filename, manifests_path):
         }
         new_config = {
             conf["metadata"]["name"]: conf["data"]
-            for conf in load_multi_yaml(open(rel_config_map).read())
+            for conf in load_multi_yaml(open(config_map).read())
         }
 
         for cm in new_config:
@@ -93,11 +93,12 @@ def launch_pod(service, pod, deploy, seed_job, manifests_path):
 
     subprocess.run(
         (
-            f"git --git-dir {manifests_path}/.git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
-            f"git --git-dir {manifests_path}/.git checkout -- audius/creator-node/creator-node-cm.yaml"
+            "git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
+            "git checkout -- audius/creator-node/creator-node-cm.yaml"
         ),
         shell=True,
         check=True,
+        cwd=manifests_path,
     )
 
     apply_config(manifests_path)
@@ -113,45 +114,49 @@ def launch_pod(service, pod, deploy, seed_job, manifests_path):
     if service == "creator-node":
         subprocess.run(
             (
-                f"kubectl apply -f {manifests_path}/audius/creator-node/creator-node-svc.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/creator-node/creator-node-pvc.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/creator-node/creator-node-deploy-ipfs.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/creator-node/creator-node-cm.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/creator-node/creator-node-deploy-backend.yaml"
+                "kubectl apply -f audius/creator-node/creator-node-svc.yaml &&"
+                "kubectl apply -f audius/creator-node/creator-node-pvc.yaml &&"
+                "kubectl apply -f audius/creator-node/creator-node-deploy-ipfs.yaml &&"
+                "kubectl apply -f audius/creator-node/creator-node-cm.yaml &&"
+                "kubectl apply -f audius/creator-node/creator-node-deploy-backend.yaml"
             ),
             shell=True,
             check=True,
+            cwd=manifests_path,
         )
     elif service == "discovery-provider":
         subprocess.run(
             (
-                f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-cm.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-svc.yaml &&"
-                f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-pvc.yaml"
+                "kubectl apply -f audius/discovery-provider/discovery-provider-cm.yaml &&"
+                "kubectl apply -f audius/discovery-provider/discovery-provider-svc.yaml &&"
+                "kubectl apply -f audius/discovery-provider/discovery-provider-pvc.yaml"
             ),
             shell=True,
             check=True,
+            cwd=manifests_path,
         )
 
         if seed_job:
             subprocess.run(
                 (
-                    f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-deploy-no-workers.yaml &&"
-                    f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-db-seed-job.yaml &&"
+                    "kubectl apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml &&"
+                    "kubectl apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml &&"
                     "kubectl wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s"
                 ),
                 shell=True,
                 check=True,
+                cwd=manifests_path,
             )
         if deploy:
             print("Waiting for seed job completion if running...")
             subprocess.run(
                 (
                     "kubectl wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s &&"
-                    f"kubectl apply -f {manifests_path}/audius/discovery-provider/discovery-provider-deploy.yaml"
+                    "kubectl apply -f audius/discovery-provider/discovery-provider-deploy.yaml"
                 ),
                 shell=True,
                 check=True,
+                cwd=manifests_path,
             )
 
     if pod:
@@ -162,15 +167,16 @@ def pull(manifests_path):
     """Git pull"""
     subprocess.run(
         (
-            f"git --git-dir {manifests_path}/.git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
-            f"git --git-dir {manifests_path}/.git checkout -- audius/creator-node/creator-node-cm.yaml"
+            "git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
+            "git checkout -- audius/creator-node/creator-node-cm.yaml"
         ),
         shell=True,
         check=True,
+        cwd=manifests_path,
     )
 
     print("Pulling changes")
-    subprocess.run(f"git --git-dir {manifests_path}/.git pull", shell=True, check=True)
+    subprocess.run("git pull", shell=True, check=True, cwd=manifests_path)
 
     apply_config(manifests_path)
 
