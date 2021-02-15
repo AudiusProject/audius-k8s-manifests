@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import urllib.request
 import subprocess
 import sys
 
@@ -52,6 +53,17 @@ def _get_unset_keys(service, manifests_path):
                 all_unset_keys[config_map["metadata"]["name"]] = unset_keys
 
     return all_unset_keys
+
+
+def _is_creator_node_healthy(health_check_resp):
+    return health_check_resp["healthy"]
+
+
+def _is_discovery_provider_healthy(health_check_resp):
+    return (
+        health_check_resp["block_difference"]
+        < health_check_resp["data"]["maximum_healthy_block_difference"]
+    )
 
 
 def _kubectl_apply(service, manifest, manifests_path):
@@ -120,12 +132,30 @@ def configure_ipfs(hostname):
 
 
 def health_check(service):
+    service_running = False
+
     for item in _kubectl_get_svc()["items"]:
         if item["metadata"]["name"] == f"{service}-backend-svc":
+            service_running = True
             port = item["spec"]["ports"][0]["nodePort"]
-            print(f"http://localhost:{port}/health_check")
-            break
-    else:
+            url = f"http://localhost:{port}/health_check"
+
+            try:
+                resp = json.loads(urllib.request.urlopen(url))
+                healthy = False
+                if service == "creator-node":
+                    healthy = _is_creator_node_healthy(resp)
+                elif service == "discovery-provider":
+                    healthy = _is_discovery_provider_healthy(resp)
+            except urllib.error.HTTPError:
+                healthy = False
+
+            print("Reponse: ")
+            print(json.dumps(resp, sort_keys=True, indent=4))
+            print()
+            print(f"{service} is {'healthy' if healthy else 'not healthy'}")
+
+    if not service_running:
         print(
             f"Provided service ({service}) does not seem to be running", file=sys.stderr
         )
