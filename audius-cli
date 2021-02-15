@@ -298,7 +298,7 @@ def main():
     # auto-upgrade subcomamnd parser
     parser_auto_upgrade = subparser.add_parser(
         "auto-upgrade",
-        help="Checks that there are no unset keys in config maps",
+        help="Sets up a cron job to auto upgrade services",
     )
 
     parser_auto_upgrade.add_argument(

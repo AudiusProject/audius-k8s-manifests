@@ -8,7 +8,7 @@ sudo swapoff /swap.img
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 # install basic deps
-sudo apt-get update && sudo apt-get install -y apt-transport-https curl jq
+sudo apt-get update && sudo apt-get install -y apt-transport-https curl jq python3-pip
 
 # install docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -41,8 +41,9 @@ echo 'alias k=kubectl' >>~/.bashrc
 sudo mkdir -p /var/k8s
 sudo chown $(id -u):$(id -g) /var/k8s
 
-# create readlink for audius-cli
+# audius-cli init
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
+pip3 install --user python-crontab
 
 # reboot for good measure
 sudo shutdown -r now
