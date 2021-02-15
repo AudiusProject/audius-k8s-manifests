@@ -8,6 +8,7 @@ import subprocess
 import sys
 
 import yaml
+from crontab import CronTab
 
 
 def _apply_config(manifests_path):
@@ -108,6 +109,17 @@ def _kubectl_wait_seed_job():
             "job/discovery-provider-db-seed-job",
         ]
     )
+
+
+def auto_upgrade(cron_expression, remove):
+    with CronTab(user=True) as cron:
+        for job in cron.find_comment("audius-cli auto-upgrade"):
+            cron.remove(job)
+        if not remove:
+            job = cron.new(
+                "yes | audius-cli upgrade --launch", "audius-cli auto-upgrade"
+            )
+            job.setall(cron_expression)
 
 
 def check_config(service, manifests_path):
@@ -283,6 +295,26 @@ def main():
         required=True,
     )
 
+    # auto-upgrade subcomamnd parser
+    parser_auto_upgrade = subparser.add_parser(
+        "auto-upgrade",
+        help="Checks that there are no unset keys in config maps",
+    )
+
+    parser_auto_upgrade.add_argument(
+        "cron_expression",
+        default="0 */6 * * *",
+        nargs="?",
+        help="Cron expression (default: every 6 hours)",
+    )
+
+    parser_auto_upgrade.add_argument(
+        "-r",
+        "--remove",
+        action="store_true",
+        help="Remove auto-upgrade job",
+    )
+
     # check subcomamnd parser
     parser_check_config = subparser.add_parser(
         "check-config",
@@ -400,6 +432,11 @@ def main():
 
     args.manifests_path = os.path.abspath(args.manifests_path)
 
+    if args.operation == "auto-upgrade":
+        auto_upgrade(
+            args.cron_expression,
+            args.remove,
+        )
     if args.operation == "check-config":
         check_config(
             args.service,
