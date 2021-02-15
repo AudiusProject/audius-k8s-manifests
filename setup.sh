@@ -41,6 +41,9 @@ echo 'alias k=kubectl' >>~/.bashrc
 sudo mkdir -p /var/k8s
 sudo chown $(id -u):$(id -g) /var/k8s
 
+# set manifests path
+echo "export MANIFESTS_PATH=$(dirname $0)" >>~/.bashrc
+
 # create readlink for audius-cli
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
 

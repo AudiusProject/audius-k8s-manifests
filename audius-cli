@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -8,216 +9,103 @@ import sys
 import yaml
 
 
-def load_multi_yaml(contents):
-    """Loads a kubernetes yaml config"""
-    return [yaml.safe_load(i) for i in contents.split("---")[1:]]
+def _apply_config(manifests_path):
+    config_file = os.path.join(manifests_path, "config.yaml")
 
+    if not os.path.isfile(config_file):
+        return
 
-def dump_multi_yaml(data, filename):
-    """Dumps a kubernetes yaml config"""
-    with open(filename, "w") as file:
-        file.write("---\n" + "---\n".join(yaml.dump(i) for i in data))
+    with open(config_file, "r") as stream:
+        config = yaml.safe_load(stream) or {}
 
+    for service, pods in config.items():
+        config_map = os.path.join(manifests_path, f"audius/{service}/{service}-cm.yaml")
+        with open(config_map, "r") as stream:
+            config_map_data = list(yaml.safe_load_all(stream))
+        config_map_names = [i["metadata"]["name"] for i in config_map_data]
 
-def backup(filename, manifests_path):
-    """Writes changed options to given filename"""
-    output = {}
-
-    for service in ["creator-node", "discovery-provider"]:
-        output[service] = {}
-
-        config_map = f"{manifests_path}/audius/{service}/{service}-cm.yaml"
-
-        proc = subprocess.run(
-            f"git show HEAD:audius/{service}/{service}-cm.yaml",
-            capture_output=True,
-            shell=True,
-            check=True,
-            cwd=manifests_path,
-        )
-
-        def_config = {
-            conf["metadata"]["name"]: conf["data"]
-            for conf in load_multi_yaml(proc.stdout.decode("utf-8"))
-        }
-        new_config = {
-            conf["metadata"]["name"]: conf["data"]
-            for conf in load_multi_yaml(open(config_map).read())
-        }
-
-        for cm in new_config:
-            output[service][cm] = {}
-            if cm not in def_config:
-                output[service][cm] = new_config[cm]
+        for pod, changes in pods.items():
+            if f"{service}-{pod}-cm" not in config_map_names:
                 continue
 
-            for key in {*new_config[cm].keys(), *def_config[cm].keys()}:
-                if key in new_config[cm] and key not in def_config[cm]:
-                    output[service][cm][key] = new_config[cm][key]
-                elif key not in new_config[cm] and key in def_config[cm]:
-                    output[service][cm][key] = ""
-                elif new_config[cm][key] != def_config[cm][key]:
-                    output[service][cm][key] = new_config[cm][key]
+            idx = config_map_names.index(f"{service}-{pod}-cm")
+            for key, value in changes.items():
+                config_map_data[idx]["data"][key] = value
 
-    open(filename, "w").write(yaml.dump(output))
+        with open(config_map, "w") as stream:
+            yaml.safe_dump_all(config_map_data, stream, explicit_start=True)
 
 
-def check_config_map(filename):
-    """Checks if configs have unset values"""
-    failed = False
+def _get_unset_keys(service, manifests_path):
+    config_map_filename = os.path.join(
+        manifests_path, f"audius/{service}/{service}-cm.yaml"
+    )
 
-    for config in load_multi_yaml(open(filename).read()):
-        unset_keys = [
-            key
-            for key, value in config["data"].items()
-            if value in ("", "<SEE_README>")
+    all_unset_keys = {}
+    with open(config_map_filename, "r") as stream:
+        for config_map in yaml.safe_load_all(stream):
+            unset_keys = []
+            for key, value in config_map["data"].items():
+                if value in ["", "<SEE_README>"]:
+                    unset_keys.append(key)
+            if unset_keys:
+                all_unset_keys[config_map["metadata"]["name"]] = unset_keys
+
+    return all_unset_keys
+
+
+def _kubectl_apply(service, manifest, manifests_path):
+    subprocess.run(
+        [
+            "kubectl",
+            "apply",
+            "-f",
+            os.path.join(manifests_path, f"audius/{service}/{service}-{manifest}.yaml"),
         ]
-        if unset_keys:
-            print(
-                f"Keys {', '.join(unset_keys)} are unset in {config['metadata']['name']}",
-                file=sys.stderr,
-            )
-            failed = True
-
-    return failed
+    )
 
 
-def launch_pod(service, pod, deploy, seed_job, manifests_path):
-    """Launch a pod"""
-    if service == "creator-node" and (deploy or seed_job):
-        print(
-            "deploy and seed_job can only be used with discovery-provider",
-            file=sys.stderr,
-        )
+def _kubectl_diff(service, manifest, manifests_path):
+    return subprocess.run(
+        [
+            "kubectl",
+            "diff",
+            "-f",
+            os.path.join(manifests_path, f"audius/{service}/{service}-{manifest}.yaml"),
+        ],
+        capture_output=True,
+    ).returncode
+
+
+def _kubectl_get_svc():
+    return json.loads(
+        subprocess.run(
+            ["kubectl", "get", "svc", "-o", "json"],
+            capture_output=True,
+        ).stdout
+    )
+
+
+def _kubectl_wait_seed_job():
+    subprocess.run(
+        [
+            "kubectl",
+            "wait",
+            "--for=condition=complete",
+            "job/discovery-provider-db-seed-job",
+        ]
+    )
+
+
+def check_config(service, manifests_path):
+    unset_keys = _get_unset_keys(service, manifests_path)
+    if unset_keys:
+        for config_map, unset in unset_keys.items():
+            print(f"{config_map} has unset keys: {', '.join(unset)}")
         sys.exit(1)
 
-    subprocess.run(
-        (
-            "git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
-            "git checkout -- audius/creator-node/creator-node-cm.yaml"
-        ),
-        shell=True,
-        check=True,
-        cwd=manifests_path,
-    )
 
-    apply_config(manifests_path)
-
-    check_failed = check_config_map(
-        f"{manifests_path}/audius/{service}/{service}-cm.yaml"
-    )
-    if check_failed:
-        inp = input("There are some unset keys in your config continue? [y/N]")
-        if not inp.lower().startswith("y"):
-            sys.exit(1)
-
-    if service == "creator-node":
-        subprocess.run(
-            (
-                "kubectl apply -f audius/creator-node/creator-node-svc.yaml &&"
-                "kubectl apply -f audius/creator-node/creator-node-pvc.yaml &&"
-                "kubectl apply -f audius/creator-node/creator-node-deploy-ipfs.yaml &&"
-                "kubectl apply -f audius/creator-node/creator-node-cm.yaml &&"
-                "kubectl apply -f audius/creator-node/creator-node-deploy-backend.yaml"
-            ),
-            shell=True,
-            check=True,
-            cwd=manifests_path,
-        )
-    elif service == "discovery-provider":
-        subprocess.run(
-            (
-                "kubectl apply -f audius/discovery-provider/discovery-provider-cm.yaml &&"
-                "kubectl apply -f audius/discovery-provider/discovery-provider-svc.yaml &&"
-                "kubectl apply -f audius/discovery-provider/discovery-provider-pvc.yaml"
-            ),
-            shell=True,
-            check=True,
-            cwd=manifests_path,
-        )
-
-        if seed_job:
-            subprocess.run(
-                (
-                    "kubectl apply -f audius/discovery-provider/discovery-provider-deploy-no-workers.yaml &&"
-                    "kubectl apply -f audius/discovery-provider/discovery-provider-db-seed-job.yaml &&"
-                    "kubectl wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s"
-                ),
-                shell=True,
-                check=True,
-                cwd=manifests_path,
-            )
-        if deploy:
-            print("Waiting for seed job completion if running...")
-            subprocess.run(
-                (
-                    "kubectl wait --for=condition=complete job/discovery-provider-db-seed-job --timeout=-1s &&"
-                    "kubectl apply -f audius/discovery-provider/discovery-provider-deploy.yaml"
-                ),
-                shell=True,
-                check=True,
-                cwd=manifests_path,
-            )
-
-    if pod:
-        subprocess.run(f"kubectl delete pods -l tier={pod}", shell=True, check=True)
-
-
-def pull(manifests_path):
-    """Git pull"""
-    subprocess.run(
-        (
-            "git checkout -- audius/discovery-provider/discovery-provider-cm.yaml &&"
-            "git checkout -- audius/creator-node/creator-node-cm.yaml"
-        ),
-        shell=True,
-        check=True,
-        cwd=manifests_path,
-    )
-
-    print("Pulling changes")
-    subprocess.run("git pull", shell=True, check=True, cwd=manifests_path)
-
-    apply_config(manifests_path)
-
-
-def set_config(service, pod, key, value, manifests_path):
-    """Set config option for a pod"""
-    config_file = f"{manifests_path}/config.yaml"
-    with open(config_file, "a") as f:
-        f.write("")
-
-    data = yaml.safe_load(open(config_file, "r").read()) or {}
-    data[service] = data[service] if service in data else {}
-    data[service][pod] = data[service][pod] if pod in data[service] else {}
-    data[service][pod][key] = value
-
-    open(config_file, "w").write(yaml.dump(data))
-
-
-def apply_config(manifests_path):
-    """Apply config from MANIFESTS_PATH/config.yaml generated by backup()"""
-    config_file = f"{manifests_path}/config.yaml"
-    with open(config_file, "a") as f:
-        f.write("")
-    config = yaml.safe_load(open(config_file, "r").read()) or {}
-
-    for service in config:
-        cm_filename = f"{manifests_path}/audius/{service}/{service}-cm.yaml"
-        output = load_multi_yaml(open(cm_filename, "r").read())
-
-        m = {pod["metadata"]["name"]: i for i, pod in enumerate(output)}
-
-        for pod in config[service]:
-            for key in config[service][pod]:
-                output[m[f"{service}-{pod}-cm"]]["data"][key] = config[service][pod][
-                    key
-                ]
-
-        dump_multi_yaml(output, cm_filename)
-
-
-def config_ipfs(hostname):
+def configure_ipfs(hostname):
     subprocess.run(
         f'kubectl exec -it $(kubectl get pods -l tier=ipfs -o json | jq -r \'.items | first.metadata.name\') -- ipfs config --json Addresses.Announce "[\\"/ip4/{hostname}/tcp/$(kubectl get svc -o json | jq \'.items | map(select(.metadata.name | contains("ipfs")).spec.ports) | flatten | map(select(.port == 4001)) | first.nodePort\')\\"]"',
         shell=True,
@@ -230,96 +118,289 @@ def config_ipfs(hostname):
     )
 
 
+def health_check(service):
+    for item in _kubectl_get_svc()["items"]:
+        if item["metadata"]["name"] == f"{service}-backend-svc":
+            port = item["spec"]["ports"][0]["nodePort"]
+            print(f"http://localhost:{port}/health_check")
+            break
+    else:
+        print(
+            "Provided service ({service}) does not seem to be running", file=sys.stderr
+        )
+        sys.exit(1)
+
+
+def launch(service, seed_job, manifests_path):
+    unset_keys = _get_unset_keys(service, manifests_path)
+    if unset_keys:
+        for config_map, unset in unset_keys.items():
+            print(f"{config_map} has unset keys: {', '.join(unset)}", file=sys.stderr)
+        if not input("Do you want to continue? [y/N] ").lower().startswith("y"):
+            sys.exit(1)
+
+    if service == "creator-node":
+        if seed_job:
+            print(
+                "The -s and --seed-job are not supported with launching creator-node",
+                file=sys.stderr,
+            )
+
+        cm_upd = _kubectl_diff("creator-node", "cm", manifests_path)
+        backend_upd = _kubectl_diff("creator-node", "backend", manifests_path)
+
+        _kubectl_apply("creator-node", "svc", manifests_path)
+        _kubectl_apply("creator-node", "pvc", manifests_path)
+        _kubectl_apply("creator-node", "deploy-ipfs", manifests_path)
+        _kubectl_apply("creator-node", "cm", manifests_path)
+        _kubectl_apply("creator-node", "backend", manifests_path)
+
+        # If config map is updated but backend is not then restart backend
+        if cm_upd and (not backend_upd):
+            print("Restarting backend")
+            subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
+    elif service == "discovery-provider":
+        cm_upd = _kubectl_diff("discovery-provider", "cm", manifests_path)
+        backend_upd = _kubectl_diff("discovery-provider", "deploy", manifests_path)
+
+        _kubectl_apply("discovery-provider", "cm", manifests_path)
+        _kubectl_apply("discovery-provider", "svc", manifests_path)
+        _kubectl_apply("discovery-provider", "pvc", manifests_path)
+
+        if seed_job:
+            _kubectl_apply("discovery-provider", "deploy-no-workers", manifests_path)
+            _kubectl_apply("discovery-provider", "db-seed-job", manifests_path)
+
+        print("Waiting for seed job to complete if running this might take a while")
+        _kubectl_wait_seed_job()
+
+        _kubectl_apply("discovery-provider", "deploy", manifests_path)
+
+        # If config map is updated but backend is not then restart backend
+        if cm_upd and (not backend_upd):
+            print("Restarting backend")
+            subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
+
+
+def set_config(service, pod, key, value, manifests_path):
+    config_file = os.path.join(manifests_path, "config.yaml")
+
+    config = {}
+    if os.path.isfile(config_file):
+        with open(config_file, "r") as stream:
+            config = yaml.safe_load(stream) or {}
+
+    config[service] = config[service] if service in config else {}
+    config[service][pod] = config[service][pod] if pod in config[service] else {}
+    config[service][pod][key] = value
+
+    with open(config_file, "w") as stream:
+        yaml.safe_dump(config, stream)
+
+    print("Updating config maps")
+    _apply_config(manifests_path)
+
+
+def upgrade(launch, manifests_path):
+    for file in [
+        "audius/creator-node/creator-node-cm.yaml",
+        "audius/discovery-provider/discovery-provider-cm.yaml",
+    ]:
+        print(f"Reverting {file}")
+        proc = subprocess.run(["git", "checkout", "--", file], cwd=manifests_path)
+        if proc.returncode != 0:
+            print(f"Unable to revert {file}", file=sys.stderr)
+            sys.exit(1)
+
+    print("Pulling changes from source")
+    proc = subprocess.run(["git", "pull"], cwd=manifests_path)
+    if proc.returncode != 0:
+        print("Unable to pull changes from source", file=sys.stderr)
+        sys.exit(1)
+
+    print("Updating config maps")
+    _apply_config(manifests_path)
+
+    if launch:
+        svc = [item["metadata"]["name"] for item in _kubectl_get_svc()["items"]]
+
+        if "creator-node-backend-svc" in svc:
+            print("Upgrading creator-node...")
+            launch("creator-node", False, manifests_path)
+        if "discovery-provider-backend-svc" in svc:
+            print("Upgrading discovery-provider...")
+            launch("discovery-provider", False, manifests_path)
+
+
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="A cli tool to manage creator-node and discovery-provider"
+    )
+
     parser.add_argument(
         "-m",
         "--manifests-path",
         default=os.getenv(
             "MANIFESTS_PATH", os.path.expanduser("~/audius-k8s-manifests")
         ),
-        help="Path to audius-k8s-manifests",
+        help="Path to audius-k8s-manifests, if not specified, the value of the MANIFESTS_PATH environment variable, or ~/audius-k8s-manifests if neither is specified.",
     )
 
-    subparser = parser.add_subparsers(required=True, dest="operation")
-
-    parser_check = subparser.add_parser(
-        "check", help="Check configs (creator-node or discovery-provider)"
+    subparser = parser.add_subparsers(
+        title="operations",
+        dest="operation",
+        required=True,
     )
-    parser_check.add_argument(
+
+    # check subcomamnd parser
+    parser_check_config = subparser.add_parser(
+        "check-config",
+        help="Checks that there are no unset keys in config maps",
+    )
+
+    parser_check_config.add_argument(
         "service",
         metavar="service",
         choices=["creator-node", "discovery-provider"],
         help="The sevice to check config for (creator-node or discovery-provider)",
     )
 
-    parser_launch = subparser.add_parser("launch", help="Launch a pod")
-    parser_launch.add_argument(
-        "-d",
-        "--deploy",
-        action="store_true",
-        help="If set discovery-provider is deployed",
+    # configure-ipfs subcomamnd parser
+    parser_configure_ipfs = subparser.add_parser(
+        "configure-ipfs",
+        help="Finishes configuration of ipfs hostname",
     )
+
+    parser_configure_ipfs.add_argument(
+        "hostname",
+        help="The hostname to use when configuring ipfs",
+    )
+
+    # health-check subcommand parser
+    parser_health_check = subparser.add_parser(
+        "health-check",
+        help="Run health checks",
+    )
+
+    parser_health_check.add_argument(
+        "service",
+        metavar="service",
+        choices=["creator-node", "discovery-provider"],
+        help="Service to run health checks for (creator-node or discovery-provider)",
+    )
+
+    # launch subcomamnd parser
+    parser_launch = subparser.add_parser(
+        "launch",
+        help="Laucnh provided service",
+    )
+
     parser_launch.add_argument(
         "-s",
         "--seed-job",
         action="store_true",
-        help="If set seed job is run when launching discovery-provider",
+        help="Run seed job when launcing discovery-provider",
     )
+
     parser_launch.add_argument(
         "service",
         metavar="service",
         choices=["creator-node", "discovery-provider"],
         help="The service to launch (creator-node or discovery-provider)",
     )
-    parser_launch.add_argument(
-        "pod",
-        nargs="?",
-        help="If provided then launch only given pod (backend, ipfs, etc.)",
+
+    # set-config subcomamnd parser
+    parser_set_config = subparser.add_parser(
+        "set-config",
+        help="Set a config option",
     )
 
-    subparser.add_parser(
-        "pull", help="Pulls from source and updates audius-k8s-manifests"
-    )
-    parser_set = subparser.add_parser("set", help="Set a config option")
-    parser_set.add_argument(
+    parser_set_config.add_argument(
         "service",
         metavar="service",
         choices=["creator-node", "discovery-provider"],
         help="The service to set a config value for (creator-node or discovery-provider)",
     )
-    parser_set.add_argument(
-        "pod", help="The pod to set a config value for (backend, db, etc.)"
-    )
-    parser_set.add_argument("key", help="The config key to set")
-    parser_set.add_argument(
-        "value", help="The new config value for the given config key"
+
+    parser_set_config.add_argument(
+        "pod",
+        help="The pod to set a config value for (backend, db, etc.)",
     )
 
-    parser_ipfs = subparser.add_parser(
-        "ipfs", help="Finishes configuration of ipfs hostname"
+    parser_set_config.add_argument(
+        "key",
+        help="The config key to set",
     )
-    parser_ipfs.add_argument("hostname", help="The IPFS hostname endpoint")
+
+    parser_set_config.add_argument(
+        "value",
+        help="The config value to set for given config key",
+    )
+
+    # upgrade subcomamnd parser
+    parser_upgrade = subparser.add_parser(
+        "upgrade",
+        help="Pulls from source and updates audius-k8s-manifests",
+    )
+
+    parser_upgrade.add_argument(
+        "-l",
+        "--launch",
+        action="store_true",
+        help="Relaunches running services after pulling from sources",
+    )
 
     args = parser.parse_args()
 
-    if args.operation == "check":
-        sys.exit(
-            check_config_map(
-                f"{args.manifests_path}/audius/{args.service}/{args.service}-cm.yaml"
-            )
+    if not os.path.isdir(args.manifests_path):
+        print(
+            f"Provided manifests-path ({args.manifests_path}) does not exist\n"
+            "You can set manifests-path by doing export MANIFESTS_PATH=<manifests_path>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if not os.path.isdir(os.path.join(args.manifests_path, ".git")):
+        print(
+            f"Provided manifests-path ({args.manifests_path}) is not a git repository\n"
+            "You can set manifests-path by doing export MANIFESTS_PATH=<manifests_path>",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    args.manifests_path = os.path.abspath(args.manifests_path)
+
+    if args.operation == "check-config":
+        check_config(
+            args.service,
+            args.manifests_path,
+        )
+    elif args.operation == "configure-ipfs":
+        configure_ipfs(
+            args.hostname,
+        )
+    elif args.operation == "health-check":
+        health_check(
+            args.service,
         )
     elif args.operation == "launch":
-        launch_pod(
-            args.service, args.pod, args.deploy, args.seed_job, args.manifests_path
+        launch(
+            args.service,
+            args.seed_job,
+            args.manifests_path,
         )
-    elif args.operation == "pull":
-        pull(args.manifests_path)
-    elif args.operation == "set":
-        set_config(args.service, args.pod, args.key, args.value, args.manifests_path)
-        apply_config(args.manifests_path)
-    elif args.operation == "ipfs":
-        config_ipfs(args.hostname)
+    elif args.operation == "set-config":
+        set_config(
+            args.service,
+            args.pod,
+            args.key,
+            args.value,
+            args.manifests_path,
+        )
+    elif args.operation == "upgrade":
+        upgrade(
+            args.launch,
+            args.manifests_path,
+        )
 
 
 if __name__ == "__main__":
