@@ -117,7 +117,7 @@ def auto_upgrade(cron_expression, remove):
             cron.remove(job)
         if not remove:
             job = cron.new(
-                "yes | audius-cli upgrade --launch", "audius-cli auto-upgrade"
+                "bash -c 'yes | audius-cli upgrade --launch'", "audius-cli auto-upgrade"
             )
             job.setall(cron_expression)
 
