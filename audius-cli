@@ -92,6 +92,7 @@ def _kubectl_wait_seed_job():
             "kubectl",
             "wait",
             "--for=condition=complete",
+            "--timeout=-1s",
             "job/discovery-provider-db-seed-job",
         ]
     )
@@ -126,7 +127,7 @@ def health_check(service):
             break
     else:
         print(
-            "Provided service ({service}) does not seem to be running", file=sys.stderr
+            f"Provided service ({service}) does not seem to be running", file=sys.stderr
         )
         sys.exit(1)
 
@@ -292,7 +293,7 @@ def main():
     # launch subcomamnd parser
     parser_launch = subparser.add_parser(
         "launch",
-        help="Laucnh provided service",
+        help="Launch provided service",
     )
 
     parser_launch.add_argument(
