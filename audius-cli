@@ -141,7 +141,7 @@ def health_check(service):
             url = f"http://localhost:{port}/health_check"
 
             try:
-                resp = json.loads(urllib.request.urlopen(url))
+                resp = json.load(urllib.request.urlopen(url))
                 healthy = False
                 if service == "creator-node":
                     healthy = _is_creator_node_healthy(resp)
