@@ -125,7 +125,7 @@ def configure_ipfs(hostname):
         check=True,
     )
     subprocess.run(
-        f"kubectl delete pod $(kubectl get pods -l tier=ipfs -o json | jq -r '.items | first.metadata.name')",
+        "kubectl delete pod $(kubectl get pods -l tier=ipfs -o json | jq -r '.items | first.metadata.name')",
         shell=True,
         check=True,
     )
@@ -232,7 +232,7 @@ def set_config(service, pod, key, value, manifests_path):
     _apply_config(manifests_path)
 
 
-def upgrade(launch, manifests_path):
+def upgrade(launch_flag, manifests_path):
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
@@ -252,7 +252,7 @@ def upgrade(launch, manifests_path):
     print("Updating config maps")
     _apply_config(manifests_path)
 
-    if launch:
+    if launch_flag:
         svc = [item["metadata"]["name"] for item in _kubectl_get_svc()["items"]]
 
         if "creator-node-backend-svc" in svc:
