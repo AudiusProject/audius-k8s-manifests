@@ -197,7 +197,7 @@ def launch(service, seed_job, manifests_path):
         _kubectl_apply("creator-node", "pvc", manifests_path)
         _kubectl_apply("creator-node", "deploy-ipfs", manifests_path)
         _kubectl_apply("creator-node", "cm", manifests_path)
-        _kubectl_apply("creator-node", "backend", manifests_path)
+        _kubectl_apply("creator-node", "deploy-backend", manifests_path)
 
         # If config map is updated but backend is not then restart backend
         if cm_upd and (not backend_upd):
