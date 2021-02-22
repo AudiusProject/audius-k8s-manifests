@@ -255,7 +255,9 @@ def set_tag(tag, manifests_path):
         print(f"Setting tag in {file}")
         with open(os.path.join(manifests_path, file), "r+") as fp:
             content = fp.read()
-            content = re.sub(r"(image: audius.*:).*", fr"\1{tag}", content)
+            pattern = r"(image: audius.*:).*"
+            replace = fr"\1{tag}"
+            content = re.sub(pattern, replace, content)
 
             fp.seek(0)
             fp.write(content)
