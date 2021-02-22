@@ -436,7 +436,7 @@ def main():
     )
 
     parser_upgrade.add_argument(
-        "-l",
+        "-p",
         "--no-launch",
         action="store_true",
         help="Does not Relaunch running services after pulling from source",
