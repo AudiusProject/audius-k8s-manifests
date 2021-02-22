@@ -118,7 +118,8 @@ def auto_upgrade(cron_expression, remove):
             cron.remove(job)
         if not remove:
             job = cron.new(
-                "bash -c 'yes | audius-cli upgrade --launch'", "audius-cli auto-upgrade"
+                "bash -c 'yes | audius-cli upgrade --no-launch'",
+                "audius-cli auto-upgrade",
             )
             job.setall(cron_expression)
 
@@ -261,7 +262,7 @@ def set_tag(tag, manifests_path):
             fp.truncate()
 
 
-def upgrade(launch_flag, manifests_path):
+def upgrade(no_launch_flag, manifests_path):
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
@@ -281,7 +282,7 @@ def upgrade(launch_flag, manifests_path):
     print("Updating config maps")
     _apply_config(manifests_path)
 
-    if not launch_flag:
+    if no_launch_flag:
         svc = [item["metadata"]["name"] for item in _kubectl_get_svc()["items"]]
 
         if "creator-node-backend-svc" in svc:
@@ -499,7 +500,7 @@ def main():
         )
     elif args.operation == "upgrade":
         upgrade(
-            args.launch,
+            args.no_launch,
             args.manifests_path,
         )
 
