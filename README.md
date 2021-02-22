@@ -132,10 +132,10 @@ Use `audius-cli` to update required variables. The full list of variables and ex
 
 Some variables must be set, you can do this with the following commands:
 ```sh
-audius-cli set creator-node backend spOwnerWallet <address of wallet that contains audius tokens>
-audius-cli set creator-node backend delegateOwnerWallet <address of wallet that contains no tokens but that is registered on chain>
-audius-cli set creator-node backend delegatePrivateKey <private key>
-audius-cli set creator-node backend creatorNodeEndpoint <your service url>
+audius-cli set-config creator-node backend spOwnerWallet <address of wallet that contains audius tokens>
+audius-cli set-config creator-node backend delegateOwnerWallet <address of wallet that contains no tokens but that is registered on chain>
+audius-cli set-config creator-node backend delegatePrivateKey <private key>
+audius-cli set-config creator-node backend creatorNodeEndpoint <your service url>
 ```
 
 **Note:** if you haven't registered the service yet, please enter the url you plan to register for `creatorNodeEndpoint`.
@@ -173,14 +173,14 @@ The indexed content includes user, track, and album/playlist information along w
 ### Run
 Some variables must be set, you can do this with the following commands:
 ```sh
-audius-cli set discovery-provider backend audius_delegate_owner_wallet <delegate_owner_wallet>
-audius-cli set discovery-provider backend audius_delegate_private_key <delegate_private_key>
+audius-cli set-config discovery-provider backend audius_delegate_owner_wallet <delegate_owner_wallet>
+audius-cli set-config discovery-provider backend audius_delegate_private_key <delegate_private_key>
 ```
 
 If you are using an external managed Postgres database (version 11.1+), replace the db url with,
 ```sh
-audius-cli set discovery-provider backend audius_db_url <audius_db_url>
-audius-cli set discovery-provider backend audius_db_url_read_replica <audius_db_url_read_replica>
+audius-cli set-config discovery-provider backend audius_db_url <audius_db_url>
+audius-cli set-config discovery-provider backend audius_db_url_read_replica <audius_db_url_read_replica>
 ```
 **Note:** If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
 
