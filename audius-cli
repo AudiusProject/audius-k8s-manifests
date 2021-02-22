@@ -252,8 +252,7 @@ def set_tag(tag, manifests_path):
         "audius/discovery-provider/discovery-provider-deploy-no-workers.yaml",
     ]:
         print(f"Setting tag in {file}")
-
-        with open(file, "r+") as fp:
+        with open(os.path.join(manifests_path, file), "r+") as fp:
             content = fp.read()
             content = re.sub(r"(image: audius.*:).*", fr"\1{tag}", content)
 
