@@ -281,7 +281,7 @@ def upgrade(launch_flag, manifests_path):
     print("Updating config maps")
     _apply_config(manifests_path)
 
-    if launch_flag:
+    if not launch_flag:
         svc = [item["metadata"]["name"] for item in _kubectl_get_svc()["items"]]
 
         if "creator-node-backend-svc" in svc:
@@ -436,9 +436,9 @@ def main():
 
     parser_upgrade.add_argument(
         "-l",
-        "--launch",
+        "--no-launch",
         action="store_true",
-        help="Relaunches running services after pulling from sources",
+        help="Does not Relaunch running services after pulling from source",
     )
 
     args = parser.parse_args()
