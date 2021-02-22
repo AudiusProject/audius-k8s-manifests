@@ -59,54 +59,11 @@ In this case, the web server port is 31744 and the IPFS port is 30480.
 
 2.) Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port the DNS and have a domain or subdomain for each service you're running. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
 
-3.) Now we will configure IPFS. 
+3.) Now we will configure IPFS.
 
-If you are using a multi-node Kubernetes deployment, you'll need to first attach a nodeSelector to the IPFS deployment. In either the [creator node deployment](https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/creator-node/creator-node-deploy-ipfs.yaml) or [discovery provider deployment](https://github.com/AudiusProject/audius-k8s-manifests/blob/master/audius/discovery-provider/discovery-provider-deploy.yaml) templates, modify the template to add the nodeSelector. See example below
-
+IPFS has some trouble identifying the public host and port inside kubernetes, this can be fixed with `audius-cli`
 ```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: discovery-provider-ipfs
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      release: discovery-provider
-      tier: ipfs
-      
-  replicas: 1
-  
-  template:
-    metadata:
-      labels:
-        release: discovery-provider
-        tier: ipfs
-        
-      annotations:
-        checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
-    spec:
-      
-      # add the following two lines along with your host
-      nodeSelector:
-        kubernetes.io/hostname: "your host here"
-```
-
-IPFS has some trouble identifying the public host and port inside Kubernetes, so we need to manually set the host and port in the public "Announce" address. This is why we need a node selector for multi node kubernetes deployments, to ensure that the IPFS node does not move. Run the command below to set the Announce address
-
-```
-k exec -it <ipfs pod name> -- ipfs config --json Addresses.Announce '["/ip4/<public ip>/tcp/<public ipfs port 4001>"]'
-<ipfs pod name> can be found by running `kubectl get pods`
-The <public ip> and <public ipfs port 4001> are the same values from section 1 that were exposed publicly.
-```
-
-Delete the ipfs pod by running `kubectl delete pod <ipfs pod name>` to restart ipfs. Once it comes up, get the new ipfs pod name and run `kubectl exec <ipfs pod name> -- ipfs id` and verify that it's been updated with the correct values in the Address[0] field. In order to confirm the connection, copy the value from the Address[0] field and from a new host or local, run the following command `docker exec <container name> ipfs swarm connect <Address[0]>`
-```
-➜ docker run -d ipfs/go-ipfs:release 
-9fcc86b09f1852817b0bfe0618092546b3b3463cff2856a57911e10f738652c2
-
-➜ docker exec 9fcc86b09f1852817b0bfe0618092546b3b3463cff2856a57911e10f738652c2 ipfs swarm connect /ip4/55.67.121.184/tcp/31276/ipfs/QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys
-connect QmQsZ5wqmV1rVxPYjsBQWYtEV5BAqzqwE2ff8Q522xr4Ys success
+audius-cli configure-ipfs hostname
 ```
 
 4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 1 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
@@ -188,31 +145,22 @@ Then run the launch command via `audius-cli`
 audius-cli launch creator-node
 ```
 
-Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 4000 is the port referenced below.
+Verify that the service is healthy by running,
 ```
-curl localhost:<CREATOR_NODE_PORT>/health_check
-curl localhost:<CREATOR_NODE_PORT>/ipfs_peer_info
+audius-cli health-check creator-node
 ```
 
 ### Upgrade
 
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
-audius-cli pull
+audius-cli upgrade --launch
 ```
 
-Make sure your configs are correct by running,
+Verify that the service is healthy by running,
 ```
-audius-cli check creator-node
+audius-cli health-check creator-node
 ```
-
-Launch the service by running
-```
-audius-cli launch creator-node
-```
-
-Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
-
 
 ---
 
@@ -248,29 +196,22 @@ Make sure that your service exposes all the required environment variables. See 
 audius-cli launch discovery-provider --seed-job --deploy
 ```
 
-Run a health check locally. To get the port that's exposed to the host, run `kubectl get svc`. The port that's mapped to the web server port 5000 is the port referenced below.
+Verify that the service is healthy by running,
 ```
-curl localhost:<DISCOVERY_PORT>/health_check
+audius-cli health-check discovery-provider
 ```
 
 ### Upgrade
 
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
-audius-cli pull
+audius-cli upgrade --launch
 ```
 
-Make sure your configs are correct by running,
+Verify that the service is healthy by running,
 ```
-audius-cli check discovery-provider
+audius-cli health-check discovery-provider
 ```
-
-Launch the service by running
-```
-audius-cli launch discovery-provider
-```
-
-Confirm that the version and gitsha have been updated through the `/health_check` endpoint.
 
 ### Next
 

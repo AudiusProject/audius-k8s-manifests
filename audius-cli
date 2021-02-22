@@ -3,9 +3,10 @@
 import argparse
 import json
 import os
-import urllib.request
+import re
 import subprocess
 import sys
+import urllib.request
 
 import yaml
 from crontab import CronTab
@@ -244,6 +245,23 @@ def set_config(service, pod, key, value, manifests_path):
     _apply_config(manifests_path)
 
 
+def set_tag(tag, manifests_path):
+    for file in [
+        "audius/creator-node/creator-node-deploy-backend.yaml",
+        "audius/discovery-provider/discovery-provider-deploy.yaml",
+        "audius/discovery-provider/discovery-provider-deploy-no-workers.yaml",
+    ]:
+        print(f"Setting tag in {file}")
+
+        with open(file, "r+") as fp:
+            content = fp.read()
+            content = re.sub(r"(image: audius.*:).*", fr"\1{tag}", content)
+
+            fp.seek(0)
+            fp.write(content)
+            fp.truncate()
+
+
 def upgrade(launch_flag, manifests_path):
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
@@ -400,6 +418,17 @@ def main():
         help="The config value to set for given config key",
     )
 
+    # set-tag subcomamnd parser
+    parser_set_tag = subparser.add_parser(
+        "set-tag",
+        help="Set tag for creator-node and discovery-provider",
+    )
+
+    parser_set_tag.add_argument(
+        "tag",
+        help="",
+    )
+
     # upgrade subcomamnd parser
     parser_upgrade = subparser.add_parser(
         "upgrade",
@@ -462,6 +491,11 @@ def main():
             args.pod,
             args.key,
             args.value,
+            args.manifests_path,
+        )
+    elif args.operation == "set-tag":
+        set_tag(
+            args.tag,
             args.manifests_path,
         )
     elif args.operation == "upgrade":
