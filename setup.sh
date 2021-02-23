@@ -43,7 +43,7 @@ sudo chown $(id -u):$(id -g) /var/k8s
 
 # audius-cli init
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
-pip3 install --user python-crontab
+pip3 install --user python-crontab pyyaml
 
 # reboot for good measure
 sudo shutdown -r now
