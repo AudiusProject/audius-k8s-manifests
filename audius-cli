@@ -13,6 +13,7 @@ from crontab import CronTab
 
 
 def _apply_config(manifests_path):
+    """Helper function to apply config maps"""
     config_file = os.path.join(manifests_path, "config.yaml")
 
     if not os.path.isfile(config_file):
@@ -40,6 +41,7 @@ def _apply_config(manifests_path):
 
 
 def _get_unset_keys(service, manifests_path):
+    """Helper function to check the config map files for values that are empty or set to <SEE_README>"""
     config_map_filename = os.path.join(
         manifests_path, f"audius/{service}/{service}-cm.yaml"
     )
@@ -114,6 +116,7 @@ def _kubectl_wait_seed_job():
 
 
 def auto_upgrade(cron_expression, remove):
+    """Function to setup a cron job that autoupgrades the node"""
     with CronTab(user=True) as cron:
         for job in cron.find_comment("audius-cli auto-upgrade"):
             cron.remove(job)
@@ -126,6 +129,7 @@ def auto_upgrade(cron_expression, remove):
 
 
 def check_config(service, manifests_path):
+    """Checks the config for unset keys"""
     unset_keys = _get_unset_keys(service, manifests_path)
     if unset_keys:
         for config_map, unset in unset_keys.items():
@@ -134,6 +138,7 @@ def check_config(service, manifests_path):
 
 
 def configure_ipfs(hostname):
+    """Function to configure the node's IPFS settings given a hostname"""
     subprocess.run(
         f'kubectl exec -it $(kubectl get pods -l tier=ipfs -o json | jq -r \'.items | first.metadata.name\') -- ipfs config --json Addresses.Announce "[\\"/ip4/{hostname}/tcp/$(kubectl get svc -o json | jq \'.items | map(select(.metadata.name | contains("ipfs")).spec.ports) | flatten | map(select(.port == 4001)) | first.nodePort\')\\"]"',
         shell=True,
@@ -147,6 +152,7 @@ def configure_ipfs(hostname):
 
 
 def health_check(service):
+    """Function to check whether a given service is healthy"""
     service_running = False
 
     for item in _kubectl_get_svc()["items"]:
@@ -178,12 +184,17 @@ def health_check(service):
 
 
 def launch(service, seed_job, manifests_path):
+    """Function to launch a given service"""
+
+    # check for unset keys
     unset_keys = _get_unset_keys(service, manifests_path)
     if unset_keys:
         for config_map, unset in unset_keys.items():
             print(f"{config_map} has unset keys: {', '.join(unset)}", file=sys.stderr)
-        if not input("Do you want to continue? [y/N] ").lower().startswith("y"):
-            sys.exit(1)
+
+    # prompt for user confirmation
+    if not input("Do you want to continue? [y/N] ").lower().startswith("y"):
+        sys.exit(1)
 
     if service == "creator-node":
         if seed_job:
@@ -229,6 +240,7 @@ def launch(service, seed_job, manifests_path):
 
 
 def set_config(service, pod, key, value, manifests_path):
+    """Function to set the config values of a service"""
     config_file = os.path.join(manifests_path, "config.yaml")
 
     config = {}
@@ -248,16 +260,18 @@ def set_config(service, pod, key, value, manifests_path):
 
 
 def set_tag(tag, manifests_path):
+    """Function to manually set the tag in the repo"""
     for file in [
         "audius/creator-node/creator-node-deploy-backend.yaml",
         "audius/discovery-provider/discovery-provider-deploy.yaml",
         "audius/discovery-provider/discovery-provider-deploy-no-workers.yaml",
     ]:
         print(f"Setting tag in {file}")
+        # use regex to replace the tag in the repo
         with open(os.path.join(manifests_path, file), "r+") as fp:
             content = fp.read()
             pattern = r"(image: audius.*:).*"
-            replace = fr"\1{tag}"
+            replace = fr"\g<1>{re.escape(tag)}"
             content = re.sub(pattern, replace, content)
 
             fp.seek(0)
@@ -265,7 +279,8 @@ def set_tag(tag, manifests_path):
             fp.truncate()
 
 
-def upgrade(no_launch_flag, manifests_path):
+def upgrade(launch_flag, manifests_path):
+    """Function to upgrade the node from github"""
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
@@ -285,7 +300,8 @@ def upgrade(no_launch_flag, manifests_path):
     print("Updating config maps")
     _apply_config(manifests_path)
 
-    if not no_launch_flag:
+    # if flag is set then relaunch nodes
+    if launch_flag:
         svc = [item["metadata"]["name"] for item in _kubectl_get_svc()["items"]]
 
         if "creator-node-backend-svc" in svc:
@@ -435,14 +451,13 @@ def main():
     # upgrade subcomamnd parser
     parser_upgrade = subparser.add_parser(
         "upgrade",
-        help="Pulls from source and updates audius-k8s-manifests",
+        help="Pulls from source and relaunches with latest version of audius-k8s-manifests",
     )
 
-    parser_upgrade.add_argument(
-        "-n",
-        "--no-launch",
-        action="store_true",
-        help="Does not Relaunch running services after pulling from source",
+    # upgrade subcomamnd parser
+    parser_pull = subparser.add_parser(
+        "pull",
+        help="Pulls from source and updates audius-k8s-manifests",
     )
 
     args = parser.parse_args()
@@ -503,7 +518,12 @@ def main():
         )
     elif args.operation == "upgrade":
         upgrade(
-            args.no_launch,
+            True,
+            args.manifests_path,
+        )
+    elif args.operation == "pull":
+        upgrade(
+            False,
             args.manifests_path,
         )
 
