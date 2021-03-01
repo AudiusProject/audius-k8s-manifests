@@ -163,6 +163,7 @@ def health_check(service):
             port = item["spec"]["ports"][0]["nodePort"]
             url = f"http://localhost:{port}/health_check"
 
+            resp = {}
             try:
                 resp = json.load(urllib.request.urlopen(url))
                 healthy = False
