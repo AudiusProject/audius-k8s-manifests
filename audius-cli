@@ -209,7 +209,7 @@ def launch(service, seed_job, manifests_path):
             )
 
         cm_upd = _kubectl_diff("creator-node", "cm", manifests_path)
-        backend_upd = _kubectl_diff("creator-node", "backend", manifests_path)
+        backend_upd = _kubectl_diff("creator-node", "deploy-backend", manifests_path)
 
         _kubectl_apply("creator-node", "svc", manifests_path)
         _kubectl_apply("creator-node", "pvc", manifests_path)
