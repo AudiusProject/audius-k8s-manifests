@@ -111,7 +111,9 @@ def _kubectl_wait_seed_job():
             "--for=condition=complete",
             "--timeout=-1s",
             "job/discovery-provider-db-seed-job",
-        ]
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
 
@@ -191,6 +193,8 @@ def launch(service, seed_job, manifests_path):
     if unset_keys:
         for config_map, unset in unset_keys.items():
             print(f"{config_map} has unset keys: {', '.join(unset)}", file=sys.stderr)
+    else:
+        print("All config keys seem to be set.")
 
     # prompt for user confirmation
     if not input("Do you want to continue? [y/N] ").lower().startswith("y"):
@@ -239,9 +243,12 @@ def launch(service, seed_job, manifests_path):
             subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
 
 
-def set_config(service, pod, key, value, manifests_path):
+def set_config(service, pod, manifests_path):
     """Function to set the config values of a service"""
     config_file = os.path.join(manifests_path, "config.yaml")
+
+    key = input("\033[1mkey   :\033[0m ")
+    value = input("\033[1mvalue :\033[0m ")
 
     config = {}
     if os.path.isfile(config_file):
@@ -427,16 +434,6 @@ def main():
         help="The pod to set a config value for (backend, db, etc.)",
     )
 
-    parser_set_config.add_argument(
-        "key",
-        help="The config key to set",
-    )
-
-    parser_set_config.add_argument(
-        "value",
-        help="The config value to set for given config key",
-    )
-
     # set-tag subcomamnd parser
     parser_set_tag = subparser.add_parser(
         "set-tag",
@@ -507,8 +504,6 @@ def main():
         set_config(
             args.service,
             args.pod,
-            args.key,
-            args.value,
             args.manifests_path,
         )
     elif args.operation == "set-tag":
