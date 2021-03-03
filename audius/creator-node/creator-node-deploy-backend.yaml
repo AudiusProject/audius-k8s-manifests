@@ -1,7 +1,6 @@
 ---
 # Source: audius-creator-node/templates/backend-deploy.yaml
 
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -12,20 +11,18 @@ spec:
     matchLabels:
       release: creator-node
       tier: backend
-      
+
   replicas: 1
-  
+
   template:
     metadata:
       labels:
         release: creator-node
         tier: backend
-        
+
       annotations:
         checksum/config: bfe234c5c17ef822f0351ad44e9e7f40ab91cfcfe6d3f3a60b1594fff3f3ba8c
     spec:
-      
-      
       containers:
       - name: backend
         imagePullPolicy: Always
@@ -68,7 +65,18 @@ spec:
         
       
 
+          command: ['sh', '-c', 'exec node src/index.js']
 
+          volumeMounts:
+            - mountPath: /file_storage
+              name: creator-node-backend-pv
+              subPath: creator-node-backend
+
+      volumes:
+        - name: creator-node-backend-pv
+
+          persistentVolumeClaim:
+            claimName: creator-node-backend-pvc
 
 ---
 # Source: audius-creator-node/templates/cache-deploy.yaml
@@ -90,13 +98,11 @@ spec:
         release: creator-node
         tier: cache
     spec:
-      
       containers:
-      - name: creator-node-cache
-        image: redis:5.0.5
-        ports:
-        - containerPort: 6379
-
+        - name: creator-node-cache
+          image: redis:5.0.5
+          ports:
+            - containerPort: 6379
 
 ---
 # Source: audius-creator-node/templates/db-deploy.yaml
@@ -112,7 +118,7 @@ spec:
       release: creator-node
       tier: db
   replicas: 1
-  
+
   template:
     metadata:
       labels:
@@ -121,22 +127,19 @@ spec:
       annotations:
         checksum/config: af1384ab763110e593ca2ef5ba901cc12fd96cccbd9b08511905ed13c981b886
     spec:
-      
       containers:
-      - name: creator-node-db
-        image: postgres:11.4
-        envFrom:
-        - configMapRef:
-            name: creator-node-db-cm
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: creator-node-db-pv
-          subPath: creator-node-db
+        - name: creator-node-db
+          image: postgres:11.4
+          envFrom:
+            - configMapRef:
+                name: creator-node-db-cm
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: creator-node-db-pv
+              subPath: creator-node-db
       volumes:
-      - name: creator-node-db-pv
-        persistentVolumeClaim:
-          claimName: creator-node-db-pvc
-
-
+        - name: creator-node-db-pv
+          persistentVolumeClaim:
+            claimName: creator-node-db-pvc
