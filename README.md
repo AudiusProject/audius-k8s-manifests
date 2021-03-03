@@ -4,9 +4,16 @@ This guide describes how to run Audius services on a single node Kubernetes clus
 
 ### 1. Cluster Setup
 
+Initialize a machine running Ubuntu 16.04 LTS or higher.
+
 A convenience script is also included to do a "one click" kubeadm node setup. You can run 
 ```sh
 yes | sh setup.sh
+```
+
+If you have already installed the necessary dependencies before, install `audius-cli` with,
+```sh
+sh install_audius_cli.sh
 ```
 
 However, if the node setup is not successful and kubectl is not available, it's advised to follow the installation steps by hand [here](./cluster-setup.md).
@@ -132,10 +139,21 @@ Use `audius-cli` to update required variables. The full list of variables and ex
 
 Some variables must be set, you can do this with the following commands:
 ```sh
-audius-cli set-config creator-node backend spOwnerWallet <address of wallet that contains audius tokens>
-audius-cli set-config creator-node backend delegateOwnerWallet <address of wallet that contains no tokens but that is registered on chain>
-audius-cli set-config creator-node backend delegatePrivateKey <private key>
-audius-cli set-config creator-node backend creatorNodeEndpoint <your service url>
+audius-cli set-config creator-node backend
+key   : spOwnerWallet
+value : <address of wallet that contains audius tokens>
+
+audius-cli set-config creator-node backend
+key   : delegateOwnerWallet
+value : <address of wallet that contains no tokens but that is registered on chain>
+
+audius-cli set-config creator-node backend
+key   : delegatePrivateKey
+value : <private key>
+
+audius-cli set-config creator-node backend
+key   : creatorNodeEndpoint
+value : <your service url>
 ```
 
 **Note:** if you haven't registered the service yet, please enter the url you plan to register for `creatorNodeEndpoint`.
@@ -154,7 +172,7 @@ audius-cli health-check creator-node
 
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
-audius-cli upgrade --launch
+audius-cli upgrade
 ```
 
 Verify that the service is healthy by running,
@@ -173,17 +191,30 @@ The indexed content includes user, track, and album/playlist information along w
 ### Run
 Some variables must be set, you can do this with the following commands:
 ```sh
-audius-cli set-config discovery-provider backend audius_delegate_owner_wallet <delegate_owner_wallet>
-audius-cli set-config discovery-provider backend audius_delegate_private_key <delegate_private_key>
+audius-cli set-config discovery-provider backend
+key   : audius_delegate_owner_wallet
+value : <delegate_owner_wallet>
+
+audius-cli set-config discovery-provider backend
+key   : audius_delegate_private_key
+value : <delegate_private_key>
 ```
 
 If you are using an external managed Postgres database (version 11.1+), replace the db url with,
 ```sh
-audius-cli set-config discovery-provider backend audius_db_url <audius_db_url>
-audius-cli set-config discovery-provider backend audius_db_url_read_replica <audius_db_url_read_replica>
-```
-**Note:** If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
+audius-cli set-config discovery-provider backend
+key   : audius_db_url
+value : <audius_db_url>
 
+audius-cli set-config discovery-provider backend
+key   : audius_db_url_read_replica
+value : <audius_db_url_read_replica>
+```
+**Note:** If there's no read replica, enter the primary db url for both env vars.
+
+The below is only if using a managed posgres database:
+
+You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
 In the managed postgres database and set the `temp_file_limit` flag to `2147483647` and run the following SQL command on the destination db.
 ```
 CREATE EXTENSION pg_trgm;
@@ -205,7 +236,7 @@ audius-cli health-check discovery-provider
 
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
-audius-cli upgrade --launch
+audius-cli upgrade
 ```
 
 Verify that the service is healthy by running,
