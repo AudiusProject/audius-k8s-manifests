@@ -137,10 +137,16 @@ spec:
         - name: discovery-provider-db-pv
           mountPath: /var/lib/postgresql/data
           subPath: discovery-provider-db
+        - name: dshm
+          mountPath: /dev/shm
       volumes:
       - name: discovery-provider-db-pv
         persistentVolumeClaim:
           claimName: discovery-provider-db-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
 
 
 ---
