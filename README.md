@@ -203,6 +203,13 @@ key   : audius_delegate_private_key
 value : <delegate_private_key>
 ```
 
+If you are using an external managed Postgres database (version 11.1+), replace the db url at the `audius_db_url` and `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
+
+In the managed postgres database and set the `temp_file_limit` flag to `2147483647` and run the following SQL command on the destination db.
+```
+CREATE EXTENSION pg_trgm;
+```
+
 If you are using an external managed Postgres database (version 11.1+), replace the db url with,
 ```sh
 audius-cli set-config discovery-provider backend
