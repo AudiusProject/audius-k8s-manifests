@@ -43,11 +43,11 @@ See below for a guide to deploying [Creator Node](#creator-node-1) and [Discover
 
 **Note:** "Creator Node" and "Discovery Provider" have recently been renamed to "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue to use the terms "Creator Node" and "Discovery Node".
 
-### 5. Logger
+### 4. Logger
 
 See the [Logger](#logger) section below for instructions on setting up the logger.
 
-### 6. Security & Infrastructure configuration
+### 5. Security & Infrastructure configuration
 
 1.) In order for clients to talk to your service, you'll need to expose two ports: the web server port and the IPFS swarm port. In order to find these ports, run `kubectl get svc`. The web server port is mapped to 4000 for creator node and 5000 for discovery provider. The IPFS swarm port is mapped to 4001
 
@@ -70,15 +70,18 @@ In this case, the web server port is 31744 and the IPFS port is 30480.
 
 IPFS has some trouble identifying the public host and port inside kubernetes, this can be fixed with `audius-cli`
 ```
-audius-cli configure-ipfs hostname
+audius-cli configure-ipfs <hostname>
 ```
+
+Example: `audius-cli configure-ipfs 108.174.10.10`
+
 
 4.) Set load balancer timeouts. Minimum timeouts are 1 hour (3600 seconds) for Creator Node requests and 1 minutes (60 seconds) for Discovery Provider requests. Track uploads especially for larger files can take several minutes to complete. 
 
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
 it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't override the timeouts from Step 4.
 
-### 7. Pre-registration checks
+### 6. Pre-registration checks
 
 Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
@@ -224,7 +227,7 @@ Make sure that your service exposes all the required environment variables. See 
 
 ### Launch
 ```sh
-audius-cli launch discovery-provider --seed-job --deploy
+audius-cli launch discovery-provider --seed-job
 ```
 
 Verify that the service is healthy by running,

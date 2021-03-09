@@ -187,7 +187,15 @@ def health_check(service):
 
 
 def launch(service, seed_job, manifests_path):
-    """Function to launch a given service"""
+    """
+    Function to launch a given service
+
+    Perform all launch steps:
+      - Check for unset key-value pairs
+      - Prompt for user launch confirmation
+      - Apply all kube manifest files (and seed job if discovery-provider)
+      - Check if the config map is updated but not the backend, in which case restart the backend pod
+    """
 
     # check for unset keys
     unset_keys = _get_unset_keys(service, manifests_path)
@@ -288,7 +296,15 @@ def set_tag(tag, manifests_path):
 
 
 def upgrade(launch_flag, manifests_path):
-    """Function to upgrade the node from github"""
+    """
+    Function to upgrade the node from github
+
+      - git checkout the config maps to prevent conflicts (configs are backed up)
+      - git pull the changes from source (audius-k8s-manifests)
+      - Apply backed up configs to the config map
+      - Call the launch function, this applies the config maps and restarts with the new configs.
+    """
+
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
@@ -340,27 +356,27 @@ def main():
     )
     subparser.required = True
 
-    # auto-upgrade subcomamnd parser
-    parser_auto_upgrade = subparser.add_parser(
-        "auto-upgrade",
-        help="Sets up a cron job to auto upgrade services",
-    )
+    # # auto-upgrade subcommand parser
+    # parser_auto_upgrade = subparser.add_parser(
+    #     "auto-upgrade",
+    #     help="Sets up a cron job to auto upgrade services",
+    # )
 
-    parser_auto_upgrade.add_argument(
-        "cron_expression",
-        default="0 */6 * * *",
-        nargs="?",
-        help="Cron expression (default: every 6 hours)",
-    )
+    # parser_auto_upgrade.add_argument(
+    #     "cron_expression",
+    #     default="0 */6 * * *",
+    #     nargs="?",
+    #     help="Cron expression (default: every 6 hours)",
+    # )
 
-    parser_auto_upgrade.add_argument(
-        "-r",
-        "--remove",
-        action="store_true",
-        help="Remove auto-upgrade job",
-    )
+    # parser_auto_upgrade.add_argument(
+    #     "-r",
+    #     "--remove",
+    #     action="store_true",
+    #     help="Remove auto-upgrade job",
+    # )
 
-    # check subcomamnd parser
+    # check subcommand parser
     parser_check_config = subparser.add_parser(
         "check-config",
         help="Checks that there are no unset keys in config maps",
@@ -373,7 +389,7 @@ def main():
         help="The sevice to check config for (creator-node or discovery-provider)",
     )
 
-    # configure-ipfs subcomamnd parser
+    # configure-ipfs subcommand parser
     parser_configure_ipfs = subparser.add_parser(
         "configure-ipfs",
         help="Finishes configuration of ipfs hostname",
@@ -397,7 +413,7 @@ def main():
         help="Service to run health checks for (creator-node or discovery-provider)",
     )
 
-    # launch subcomamnd parser
+    # launch subcommand parser
     parser_launch = subparser.add_parser(
         "launch",
         help="Launch provided service",
@@ -417,7 +433,7 @@ def main():
         help="The service to launch (creator-node or discovery-provider)",
     )
 
-    # set-config subcomamnd parser
+    # set-config subcommand parser
     parser_set_config = subparser.add_parser(
         "set-config",
         help="Set a config option",
@@ -435,7 +451,7 @@ def main():
         help="The pod to set a config value for (backend, db, etc.)",
     )
 
-    # set-tag subcomamnd parser
+    # set-tag subcommand parser
     parser_set_tag = subparser.add_parser(
         "set-tag",
         help="Set tag for creator-node and discovery-provider",
@@ -446,18 +462,21 @@ def main():
         help="",
     )
 
-    # upgrade subcomamnd parser
+    # upgrade subcommand parser
     parser_upgrade = subparser.add_parser(
         "upgrade",
         help="Pulls from source and relaunches with latest version of audius-k8s-manifests",
     )
 
-    # upgrade subcomamnd parser
+    # upgrade subcommand parser
     parser_pull = subparser.add_parser(
         "pull",
         help="Pulls from source and updates audius-k8s-manifests",
     )
 
+    if len(sys.argv) == 1:
+        parser.print_help()
+        parser.exit()
     args = parser.parse_args()
 
     if not os.path.isdir(args.manifests_path):
@@ -477,11 +496,11 @@ def main():
 
     args.manifests_path = os.path.abspath(args.manifests_path)
 
-    if args.operation == "auto-upgrade":
-        auto_upgrade(
-            args.cron_expression,
-            args.remove,
-        )
+    # if args.operation == "auto-upgrade":
+    #     auto_upgrade(
+    #         args.cron_expression,
+    #         args.remove,
+    #     )
     if args.operation == "check-config":
         check_config(
             args.service,

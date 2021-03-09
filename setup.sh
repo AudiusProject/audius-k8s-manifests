@@ -43,6 +43,7 @@ sudo mkdir -p /var/k8s
 sudo chown $(id -u):$(id -g) /var/k8s
 
 # audius-cli init
+chmod +x $(dirname $(readlink -f "$0"))/audius-cli
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python3.8 get-pip.py --force-reinstall

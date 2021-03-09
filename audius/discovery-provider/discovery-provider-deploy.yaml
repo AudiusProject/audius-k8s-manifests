@@ -20,54 +20,58 @@ spec:
       annotations:
         checksum/config: 720c43ab8607398207813cac2e0917ec37181a837d7229401be5fb99ee255af3
     spec:
+      
+      
       containers:
-        - name: server
-          imagePullPolicy: Always
+      - name: server
+        imagePullPolicy: Always
+        
+        image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
+        
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-backend-cm
+        
+        ports:
+        - containerPort: 5000
+        livenessProbe:
+          httpGet:
+            path: /health_check
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          failureThreshold: 5
+          timeoutSeconds: 6
+        
+        command: ["sh", "-c", "./scripts/prod-server.sh"]
+        
+        
+      - name: worker
+        imagePullPolicy: Always
+        
+        image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
+        
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-backend-cm
+        
+        ports:
+        - containerPort: 5000
+        command: ["sh", "-c", "celery -A src.worker.celery worker --loglevel info"]
+      - name: beat
+        imagePullPolicy: Always
+        
+        image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
+        
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-backend-cm
+        
+        ports:
+        - containerPort: 5000
+        command: ["sh", "-c", "celery -A src.worker.celery beat"]
+      
 
-          image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
-
-          envFrom:
-            - configMapRef:
-                name: discovery-provider-backend-cm
-
-          ports:
-            - containerPort: 5000
-          livenessProbe:
-            httpGet:
-              path: /health_check
-              port: 5000
-            initialDelaySeconds: 3
-            periodSeconds: 10
-            failureThreshold: 5
-            timeoutSeconds: 6
-
-          command: ['sh', '-c', './scripts/prod-server.sh']
-
-        - name: worker
-          imagePullPolicy: Always
-
-          image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
-
-          envFrom:
-            - configMapRef:
-                name: discovery-provider-backend-cm
-
-          ports:
-            - containerPort: 5000
-          command:
-            ['sh', '-c', 'celery -A src.worker.celery worker --loglevel info']
-        - name: beat
-          imagePullPolicy: Always
-
-          image: audius/discovery-provider:e05e7b2928f50ad47503cab3b403d45c2b8e5f72
-
-          envFrom:
-            - configMapRef:
-                name: discovery-provider-backend-cm
-
-          ports:
-            - containerPort: 5000
-          command: ['sh', '-c', 'celery -A src.worker.celery beat']
 
 ---
 # Source: audius-discovery-provider/templates/cache-deploy.yaml
@@ -89,12 +93,14 @@ spec:
         release: discovery-provider
         tier: cache
     spec:
+      
       containers:
-        - name: discovery-provider-cache
-          image: redis:5.0.5
-          ports:
-            - containerPort: 6379
-          command: ['redis-server', '--save', "''"]
+      - name: discovery-provider-cache
+        image: redis:5.0.5
+        ports:
+        - containerPort: 6379
+        command: ["redis-server", "--save", "''"]
+
 
 ---
 # Source: audius-discovery-provider/templates/db-deploy.yaml
@@ -110,7 +116,7 @@ spec:
       release: discovery-provider
       tier: db
   replicas: 1
-
+  
   template:
     metadata:
       labels:
@@ -120,24 +126,26 @@ spec:
         checksum/config: fa0013b1ddd94b46f279371d89fb6c758acc5c910e5c83a01526f30f46d9e203
     spec:
       containers:
-        - name: postgres
-          image: postgres:11.4
-          envFrom:
-            - configMapRef:
-                name: discovery-provider-db-cm
-          ports:
-            - containerPort: 5432
-          volumeMounts:
-            - name: discovery-provider-db-pv
-              mountPath: /var/lib/postgresql/data
-              subPath: discovery-provider-db
-      volumes:
+      - name: postgres
+        image: postgres:11.4
+        envFrom:
+        - configMapRef:
+            name: discovery-provider-db-cm
+        ports:
+        - containerPort: 5432
+        volumeMounts:
         - name: discovery-provider-db-pv
-          persistentVolumeClaim:
-            claimName: discovery-provider-db-pvc
+          mountPath: /var/lib/postgresql/data
+          subPath: discovery-provider-db
+      volumes:
+      - name: discovery-provider-db-pv
+        persistentVolumeClaim:
+          claimName: discovery-provider-db-pvc
+
 
 ---
 # Source: audius-discovery-provider/templates/ipfs-deploy.yaml
+
 
 apiVersion: apps/v1
 kind: Deployment
@@ -149,49 +157,54 @@ spec:
     matchLabels:
       release: discovery-provider
       tier: ipfs
-
+      
   replicas: 1
-
+  
   template:
     metadata:
       labels:
         release: discovery-provider
         tier: ipfs
-
+        
       annotations:
         checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
     spec:
+      
+      
       containers:
-        - name: discovery-provider-ipfs
-          image: ipfs/go-ipfs:v0.4.23
-          ports:
-            - name: swarm
-              containerPort: 4001
-            - name: api
-              containerPort: 5001
-            - name: http
-              containerPort: 8080
-          volumeMounts:
-            - name: discovery-provider-ipfs-pv
-              mountPath: /data/ipfs
-              subPath: discovery-provider-ipfs
-      initContainers:
-        - name: init
-          image: ipfs/go-ipfs:v0.4.23
-          command: ['sh', '/scripts/ipfs-remove-lock.sh']
-          volumeMounts:
-            - name: discovery-provider-ipfs-pv
-              mountPath: /data/ipfs
-              subPath: discovery-provider-ipfs
-            - name: ipfs-cm
-              mountPath: /scripts/ipfs-remove-lock.sh
-              subPath: ipfs-remove-lock.sh
-      volumes:
+      - name: discovery-provider-ipfs
+        image: ipfs/go-ipfs:v0.4.23
+        ports:
+        - name: swarm
+          containerPort: 4001
+        - name: api
+          containerPort: 5001
+        - name: http
+          containerPort: 8080
+        volumeMounts:
         - name: discovery-provider-ipfs-pv
-
-          persistentVolumeClaim:
-            claimName: discovery-provider-ipfs-pvc
-
+          mountPath: /data/ipfs
+          subPath: discovery-provider-ipfs
+      initContainers:
+      - name: init
+        image: ipfs/go-ipfs:v0.4.23
+        command: ["sh", "/scripts/ipfs-remove-lock.sh"]
+        volumeMounts:
+        - name: discovery-provider-ipfs-pv
+          mountPath: /data/ipfs
+          subPath: discovery-provider-ipfs
         - name: ipfs-cm
-          configMap:
-            name: discovery-provider-ipfs-cm
+          mountPath: /scripts/ipfs-remove-lock.sh
+          subPath: ipfs-remove-lock.sh
+      volumes:
+      - name: discovery-provider-ipfs-pv
+        
+        persistentVolumeClaim:
+          claimName: discovery-provider-ipfs-pvc
+        
+      - name: ipfs-cm
+        configMap:
+          name: discovery-provider-ipfs-cm
+
+
+
