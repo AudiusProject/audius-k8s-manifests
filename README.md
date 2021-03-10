@@ -168,6 +168,11 @@ Since you've completed all the steps thus far, you're about ready to register!
 
 You can register via the dashboard on https://dashboard.audius.org
 
+### 9. Script to Initiate Rounds and Process Claims (Optional)
+
+If you would like to automatically run claim operations whenever a new round is initiated, a script is included for your convenience in the sp-utilities/claim folder. Further instructions are provided in the sp-utilities README.
+
+
 ---
 
 
