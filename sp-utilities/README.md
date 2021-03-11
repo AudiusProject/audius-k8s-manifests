@@ -1,6 +1,6 @@
 ## Service Provider Utilities & Actions
 
-This project is a set of common scripts and utilities to manage services. There's two sub-folders, one for `creator-node` and one for `discovery-provider`.
+This project is a set of common scripts and utilities to manage services. There's three sub-folders, one for `creator-node` and one for `discovery-provider`, and one to process claims.
 
 ### creator-node/
 
@@ -100,3 +100,31 @@ All checks passed!
 ```
 
 If you see the message "Error running script" this script did not finish successfully. If you see "All checks passed!" this script finished successfully.
+
+### claim
+
+If you would like to automatically run claim operations whenever a new round is initiated, `claim.js` is included for your convenience in the claim folder.
+
+```
+npm install
+cd sp-utilities/claim
+```
+
+Then you can run the following command to setup a cron job. (Be sure to replace the full path to `claim.js`)
+```
+(crontab -l 2>/dev/null; echo "0 */6 * * * node full/path/to/claim.js <spOwnerWallet> <privateKey>") | crontab -
+```
+
+Be sure to replace `full/path/to/claim.js` with the actual path on your local machine.
+
+
+```
+Usage: claim [options] <spOwnerWallet> <privateKey>
+
+Options:
+  --eth-registry-address <ethRegistryAddress>  Registry contract address (default: "0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C")
+  --eth-token-address <ethTokenAddress>        Token contract address (default: "0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998")
+  --web3-provider <web3Provider>               Web3 provider to use (default: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1")
+  --init-round                             initiate new rounds
+  -h, --help                                   display help for command
+```
