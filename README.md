@@ -4,21 +4,30 @@ This guide describes how to run Audius services on a single node Kubernetes clus
 
 ### 1. Cluster Setup
 
-Initialize a machine running Ubuntu 16.04 LTS or higher.
+Initialize a machine running Ubuntu 16.04 LTS or higher, with at least 8 vCPUs and 16 GB of RAM.
 
 A convenience script is also included to do a "one click" kubeadm node setup. You can run 
 ```sh
 yes | sh setup.sh
 ```
 
-If you have already installed the necessary dependencies before, install `audius-cli` with,
+However, if the node setup is not successful and kubectl is not available, it's advised to follow the installation steps by hand [here](./cluster-setup.md).
+
+### 2. Audius CLI Setup
+
+You can skip this section if installing for the first time.
+
+You can install `audius-cli` with
 ```sh
 sh install_audius_cli.sh
 ```
 
-However, if the node setup is not successful and kubectl is not available, it's advised to follow the installation steps by hand [here](./cluster-setup.md).
+You can then view all commands available via `audius-cli` by simply running:
+```
+audius-cli -h
+```
 
-### 2. Storage
+### 3. Storage
 
 Provision a shared host directory for persistent storage,
 ```sh
@@ -30,6 +39,11 @@ If sudo was required, change ownership with,
 sudo chown <user>:<group> /var/k8s
 ```
 
+typically this will be,
+```
+sudo chown -R ubuntu:ubuntu /var/k8s
+```
+
 **Note:** Storage will persist on the host even after deleting `pv, pvc` objects.
 
 To nuke all data and start clean,
@@ -37,17 +51,17 @@ To nuke all data and start clean,
 rm -rf /var/k8s/*
 ```
 
-### 3. Setup Service
+### 4. Setup Service
 
 See below for a guide to deploying [Creator Node](#creator-node-1) and [Discovery Provider](#discovery-provider-1) via `audius-cli`. After you finish setting up the service, please continue with the Logger section.
 
 **Note:** "Creator Node" and "Discovery Provider" have recently been renamed to "Content Node" and "Discovery Node" respectively. However for consistency within the code and this README, we will continue to use the terms "Creator Node" and "Discovery Node".
 
-### 4. Logger
+### 5. Logger
 
 See the [Logger](#logger) section below for instructions on setting up the logger.
 
-### 5. Security & Infrastructure configuration
+### 6. Security & Infrastructure configuration
 
 1.) In order for clients to talk to your service, you'll need to expose two ports: the web server port and the IPFS swarm port. In order to find these ports, run `kubectl get svc`. The web server port is mapped to 4000 for creator node and 5000 for discovery provider. The IPFS swarm port is mapped to 4001
 
@@ -81,7 +95,7 @@ Example: `audius-cli configure-ipfs 108.174.10.10`
 5.) In addition to configuring your security groups to restrict access to just the web server and IPFS swarm port (4001), 
 it's recommended that your server or load balancer is protected from DoS attacks. Services like Cloudfront and Cloudflare offer free or low cost services to do this. It would also be possible to use iptables to configure protection as laid out here https://javapipe.com/blog/iptables-ddos-protection/. Please make sure proxies don't override the timeouts from Step 4.
 
-### 6. Pre-registration checks
+### 7. Pre-registration checks
 
 Before registering a service to the dashboard we need to make sure the service is properly configured. Follow the checks below for the type of service you're configuring. Failure to verify that all of these work properly could cause user actions to fail and may lead to slashing actions.
 
@@ -178,6 +192,8 @@ audius-cli health-check creator-node
 
 ### Upgrade
 
+If you do not have `audius-cli`, instructions on how to install are available in [the section above](#2-audius-cli-setup).
+
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
 audius-cli upgrade
@@ -187,6 +203,22 @@ Verify that the service is healthy by running,
 ```
 audius-cli health-check creator-node
 ```
+
+**Old Upgrade flow with kubectl:**
+To upgrade your service, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
+```
+git stash
+git pull
+git stash apply
+```
+
+Ensure that your configs are present in `audius/creator-node/creator-node-cm.yaml`, then do the following,
+```
+k apply -f audius/creator-node/creator-node-cm.yaml
+k apply -f audius/creator-node/creator-node-deploy-backend.yaml
+```
+
+You can verify your upgrade with the `\health_check` endpoint.
 
 ---
 
@@ -206,13 +238,6 @@ value : <delegate_owner_wallet>
 audius-cli set-config discovery-provider backend
 key   : audius_delegate_private_key
 value : <delegate_private_key>
-```
-
-If you are using an external managed Postgres database (version 11.1+), replace the db url at the `audius_db_url` and `audius_db_url_read_replica` fields. If there's no read replica, enter the primary db url for both env vars. You will have to replace the db seed job in `audius/discovery-provider/discovery-provider-db-seed-job.yaml` as well. Examples are provided.
-
-In the managed postgres database and set the `temp_file_limit` flag to `2147483647` and run the following SQL command on the destination db.
-```
-CREATE EXTENSION pg_trgm;
 ```
 
 If you are using an external managed Postgres database (version 11.1+), replace the db url with,
@@ -249,6 +274,8 @@ audius-cli health-check discovery-provider
 
 ### Upgrade
 
+If you do not have `audius-cli`, instructions on how to install are available in [the section above](#2-audius-cli-setup).
+
 To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
 audius-cli upgrade
@@ -258,6 +285,22 @@ Verify that the service is healthy by running,
 ```
 audius-cli health-check discovery-provider
 ```
+
+**Old Upgrade flow with kubectl:**
+To upgrade your service, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
+```
+git stash
+git pull
+git stash apply
+```
+
+Ensure that your configs are present in `audius/discovery-provider/discovery-provider-cm.yaml`, then do the following,
+```
+k apply -f audius/discovery-provider/discovery-provider-cm.yaml
+k apply -f audius/discovery-provider/discovery-provider-deploy.yaml
+```
+
+You can verify your upgrade with the `\health_check` endpoint.
 
 ### Next
 
