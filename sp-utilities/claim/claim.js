@@ -33,7 +33,7 @@ const configureLibs = async (account, ethRegistryAddress, ethTokenAddress, web3P
 }
 
 
-async function run(spOwnerWallet, privateKey, { ethRegistryAddress, ethTokenAddress, web3Provider, initRound }) {
+async function run(spOwnerWallet, privateKey, { ethRegistryAddress, ethTokenAddress, web3Provider, initRound, initiateGas, claimGas }) {
     const provider = new HDWalletProvider({ privateKeys: [privateKey], providerOrUrl: web3Provider })
     const web3 = new Web3(provider)
 
@@ -61,13 +61,13 @@ async function run(spOwnerWallet, privateKey, { ethRegistryAddress, ethTokenAddr
         }
 
         console.log('Initializing Round')
-        await claimsManagerContract.initiateRound(0)
+        await claimsManagerContract.initiateRound(0, initiateGas)
         console.log('Initiated Round')
     }
 
     if (claimPending) {
         console.log('Claiming Rewards')
-        await delegateContract.claimRewards(spOwnerWallet, 0)
+        await delegateContract.claimRewards(spOwnerWallet, 0, claimGas)
         console.log('Claimed Rewards successfully')
     }
 
@@ -81,6 +81,8 @@ async function main() {
         .option('--eth-token-address <ethTokenAddress>', 'Token contract address', defaultTokenAddress)
         .option('--web3-provider <web3Provider>', 'Web3 provider to use', defaultWeb3Provider)
         .option('--init-round', 'Initiate new rounds')
+        .option('--claim-gas', 'Gas for claiming', 1500000)
+        .option('--initiate-gas', 'Gas for Initiating new rounds', 100000)
         .action(run)
 
     await program.parseAsync(process.argv)
