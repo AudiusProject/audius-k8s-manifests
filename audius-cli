@@ -65,6 +65,19 @@ def _get_unset_keys(service, manifests_path):
     return all_unset_keys
 
 
+def _git_log(repo, commit, count):
+    resp = json.load(urllib.request.urlopen(f"https://api.github.com/repos/{repo}/commits?sha={commit}&per_page={count}"))
+
+    ret = []
+    for commit in resp:
+        sha = commit["sha"][0:8]
+        msg = commit["commit"]["message"].split('\n')[0]
+        author = commit["author"]["login"]
+        ret.append(f"[{sha}] {msg} {author}")
+
+    return '\n'.join(ret)
+
+
 def _is_creator_node_healthy(health_check_resp):
     return health_check_resp["healthy"]
 
@@ -305,6 +318,9 @@ def set_tag(tag, manifests_path):
             fp.seek(0)
             fp.write(content)
             fp.truncate()
+
+    print()
+    print(_git_log("AudiusProject/audius-protocol", tag, 10))
 
 
 def upgrade(launch_flag, manifests_path):
