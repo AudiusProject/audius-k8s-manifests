@@ -194,7 +194,7 @@ audius-cli health-check creator-node
 
 If you do not have `audius-cli`, instructions on how to install are available in [the section above](#2-audius-cli-setup).
 
-To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
+To upgrade your service using `audius-cli`, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
 audius-cli upgrade
 ```
@@ -205,7 +205,7 @@ audius-cli health-check creator-node
 ```
 
 **Old Upgrade flow with kubectl:**
-To upgrade your service, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
+To upgrade your service using `kubectl`, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
 ```
 git stash
 git pull
@@ -215,6 +215,7 @@ git stash apply
 Ensure that your configs are present in `audius/creator-node/creator-node-cm.yaml`, then do the following,
 ```
 k apply -f audius/creator-node/creator-node-cm.yaml
+k apply -f audius/creator-node/creator-node-deploy-ipfs.yaml
 k apply -f audius/creator-node/creator-node-deploy-backend.yaml
 ```
 
@@ -276,7 +277,7 @@ audius-cli health-check discovery-provider
 
 If you do not have `audius-cli`, instructions on how to install are available in [the section above](#2-audius-cli-setup).
 
-To upgrade your service, you will need to pull the latest manifest code. You can do this with `audius-cli`
+To upgrade your service using `audius-cli`, you will need to pull the latest manifest code. You can do this with `audius-cli`
 ```
 audius-cli upgrade
 ```
@@ -287,7 +288,7 @@ audius-cli health-check discovery-provider
 ```
 
 **Old Upgrade flow with kubectl:**
-To upgrade your service, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
+To upgrade your service using kubectl, you will need to pull the latest `k8s-manifests` code. To do this, run the following,
 ```
 git stash
 git pull
