@@ -16,17 +16,40 @@ function parseEnvVarsAndArgs () {
 }
 
 async function healthCheck () {
-  let requestConfig = {
+  const requestConfig = {
     url: `${DISCOVERY_PROVIDER_ENDPOINT}/health_check`,
     method: 'get',
     responseType: 'json'
   }
-  let resp = await axios(requestConfig)
-  let data = resp.data
+  const resp = await axios(requestConfig)
+  const data = resp.data
   assert.deepStrictEqual(resp.status, 200)
   assert.deepStrictEqual(data.data.db.number > 0, true)
   assert.deepStrictEqual(data.data.block_difference < 5, true)
   console.log('✓ Health check passed successfully')
+}
+
+async function ipCheck () {
+  const discoveryRequestConfig = {
+    url: `${DISCOVERY_PROVIDER_ENDPOINT}/ip_check`,
+    method: 'get',
+    responseType: 'json'
+  }
+  const discoveryResp = await axios(discoveryRequestConfig)
+  const discoveryClaimedIP = discoveryResp.data.data
+
+  const ipApiRequestConfig = {
+    url: 'https://ipapi.co/json',
+    method: 'get',
+    responseType: 'json'
+  }
+  const ipApiResp = await axios(ipApiRequestConfig)
+  const ipApiClaimedIP = ipApiResp.data.ip
+
+  assert.deepStrictEqual(discoveryResp.status, 200)
+  assert.deepStrictEqual(ipApiResp.status, 200)
+  assert.deepStrictEqual(discoveryClaimedIP, ipApiClaimedIP)
+  console.log('✓ IP check passed successfully')
 }
 
 async function run () {
@@ -38,6 +61,7 @@ async function run () {
   }
   try {
     await healthCheck()
+    await ipCheck()
     console.log("All checks passed!")
     process.exit(0)
   } catch (e) {
