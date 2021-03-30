@@ -1,0 +1,31 @@
+---
+# Source: audius-identity-service/templates/backend-cm.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: identity-backend-cm
+  namespace: default
+data:
+  
+  dbUrl: "postgres://postgres:postgres@identity-db-svc.default.svc.cluster.local:5432/audius_identity_service"
+  
+  redisHost: "identity-cache-svc.default.svc.cluster.local"
+  redisPort: "6379"
+  blacklisterPublicKey: "0xfeebEA99dE524ac668B6f151177EcA60b30A09c9"
+  ethNetworkId: "1557772555559"
+  ethOwnerWallet: "0x3eC41B55D9A1Edd593Ef38493d8125DeB4EE03a9"
+  ethProviderUrl: ""
+  ethRegistryAddress: "0xa0fd5C42F81CC35aa66E5f8Ee85098fF7D669fa6"
+  ethTokenAddress: "0x2999e02829DC711B9254187962ba44d1fFcf5481"
+  mailgunApiKey: ""
+  minimumBalance: "25"
+  rateLimitingListensIPWhitelist: ""
+  registryAddress: "0x65D2F689a0ea3A5D1Ee97f7F8f3a9549860b9Ed5"
+  relayerPublicKey: "0xdead88167Bd06Cbc251FB8336B44259c6407dd07"
+  secondaryWeb3Provider: "https://core.poa.network"
+  twitterAPIKey: ""
+  userVerifierPublicKey: "0xbeef8E42e8B5964fDD2b7ca8efA0d9aef38AA996"
+  web3Provider: "https://poa-gateway.audius.co"
+
+

@@ -182,7 +182,7 @@ value : <your service url>
 
 Then run the launch command via `audius-cli`
 ```
-audius-cli launch creator-node
+audius-cli launch creator-node --configure-ipfs
 ```
 
 Verify that the service is healthy by running,
@@ -265,7 +265,7 @@ Make sure that your service exposes all the required environment variables. See 
 
 ### Launch
 ```sh
-audius-cli launch discovery-provider --seed-job
+audius-cli launch discovery-provider --seed-job --configure-ipfs
 ```
 
 Verify that the service is healthy by running,
