@@ -13,7 +13,7 @@ def main():
         "~/audius-k8s-manifests"
     )
 
-    for service in ["creator-node", "discovery-provider"]:
+    for service in ["creator-node", "discovery-provider", "identity"]:
         config_map = os.path.join(manifests_path, f"audius/{service}/{service}-cm.yaml")
 
         proc = subprocess.run(

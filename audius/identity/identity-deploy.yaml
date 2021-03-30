@@ -1,0 +1,83 @@
+---
+# Source: audius-identity-service/templates/backend-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-backend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: identity
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: identity
+        tier: backend
+      annotations:
+        checksum/config: ef0850b24dd0a630a8e62823ba12ab8bb7316ce979d6925fafde8d1864fddd29
+    spec:
+      
+      containers:
+      - name: identity-backend
+        imagePullPolicy: Always
+        
+        image: audius/identity-service:0.1.0
+        
+        envFrom:
+        - configMapRef:
+            name: identity-backend-cm
+        
+        ports:
+        - containerPort: 7000
+        livenessProbe:
+          httpGet:
+            path: /health_check
+            port: 7000
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health_check
+            port: 7000
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        
+        command: ["sh", "-c", "exec node src/index.js"]
+        
+        
+      
+
+
+---
+# Source: audius-identity-service/templates/cache-deploy.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-cache
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      release: identity
+      tier: cache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        release: identity
+        tier: cache
+    spec:
+      
+      containers:
+      - name: identity-cache
+        image: redis:5.0.5
+        ports:
+        - containerPort: 6379
+
+

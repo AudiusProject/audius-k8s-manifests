@@ -66,16 +66,20 @@ def _get_unset_keys(service, manifests_path):
 
 
 def _git_log(repo, commit, count):
-    resp = json.load(urllib.request.urlopen(f"https://api.github.com/repos/{repo}/commits?sha={commit}&per_page={count}"))
+    resp = json.load(
+        urllib.request.urlopen(
+            f"https://api.github.com/repos/{repo}/commits?sha={commit}&per_page={count}"
+        )
+    )
 
     ret = []
     for commit in resp:
         sha = commit["sha"][0:8]
-        msg = commit["commit"]["message"].split('\n')[0]
+        msg = commit["commit"]["message"].split("\n")[0]
         author = commit["author"]["login"]
         ret.append(f"[{sha}] {msg} {author}")
 
-    return '\n'.join(ret)
+    return "\n".join(ret)
 
 
 def _is_creator_node_healthy(health_check_resp):
@@ -87,6 +91,10 @@ def _is_discovery_provider_healthy(health_check_resp):
         health_check_resp["block_difference"]
         < health_check_resp["data"]["maximum_healthy_block_difference"]
     )
+
+
+def _is_identity_healthy(health_check_resp):
+    return health_check_resp["healthy"]
 
 
 def _kubectl_apply(service, manifest, manifests_path):
@@ -190,6 +198,8 @@ def health_check(service):
                     healthy = _is_creator_node_healthy(resp)
                 elif service == "discovery-provider":
                     healthy = _is_discovery_provider_healthy(resp)
+                elif service == "identity":
+                    healthy = _is_identity_healthy(resp)
             except urllib.error.HTTPError:
                 healthy = False
 
@@ -205,7 +215,7 @@ def health_check(service):
         sys.exit(1)
 
 
-def launch(service, seed_job, manifests_path):
+def launch(service, configure_ipfs, seed_job, manifests_path):
     """
     Function to launch a given service
 
@@ -271,10 +281,23 @@ def launch(service, seed_job, manifests_path):
         if cm_upd and (not backend_upd):
             print("Restarting backend")
             subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
+    elif service == "identity":
+        cm_upd = _kubectl_diff("identity", "cm", manifests_path)
+        backend_upd = _kubectl_diff("identity", "deploy", manifests_path)
 
-    print("Sleeping 60 seconds...")
-    time.sleep(60)
-    configure_ipfs(_get_ip_addr())
+        _kubectl_apply("identity", "svc", manifests_path)
+        _kubectl_apply("identity", "cm", manifests_path)
+        _kubectl_apply("identity", "deploy", manifests_path)
+
+        # If config map is updated but backend is not then restart backend
+        if cm_upd and (not backend_upd):
+            print("Restarting backend")
+            subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
+
+    if configure_ipfs:
+        print("Sleeping 60 seconds...")
+        time.sleep(60)
+        configure_ipfs(_get_ip_addr())
 
 
 def set_config(service, pod, manifests_path):
@@ -306,6 +329,7 @@ def set_tag(tag, manifests_path):
         "audius/creator-node/creator-node-deploy-backend.yaml",
         "audius/discovery-provider/discovery-provider-deploy.yaml",
         "audius/discovery-provider/discovery-provider-deploy-no-workers.yaml",
+        "audius/identity/identity-deploy.yaml",
     ]:
         print(f"Setting tag in {file}")
         # use regex to replace the tag in the repo
@@ -336,6 +360,7 @@ def upgrade(launch_flag, manifests_path):
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
+        "audius/identity/identity-cm.yaml",
     ]:
         print(f"Reverting {file}")
         proc = subprocess.run(["git", "checkout", "--", file], cwd=manifests_path)
@@ -362,11 +387,14 @@ def upgrade(launch_flag, manifests_path):
         if "discovery-provider-backend-svc" in svc:
             print("Upgrading discovery-provider...")
             launch("discovery-provider", False, manifests_path)
+        if "identity-backend-svc" in svc:
+            print("Upgrading identity...")
+            launch("identity", False, manifests_path)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="A cli tool to manage creator-node and discovery-provider"
+        description="A cli tool to manage creator-node, discovery-provider and identity"
     )
 
     parser.add_argument(
@@ -413,8 +441,8 @@ def main():
     parser_check_config.add_argument(
         "service",
         metavar="service",
-        choices=["creator-node", "discovery-provider"],
-        help="The sevice to check config for (creator-node or discovery-provider)",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="The sevice to check config for (creator-node, discovery-provider or identity)",
     )
 
     # configure-ipfs subcommand parser
@@ -437,8 +465,8 @@ def main():
     parser_health_check.add_argument(
         "service",
         metavar="service",
-        choices=["creator-node", "discovery-provider"],
-        help="Service to run health checks for (creator-node or discovery-provider)",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="Service to run health checks for (creator-node, discovery-provider, identity)",
     )
 
     # launch subcommand parser
@@ -455,10 +483,17 @@ def main():
     )
 
     parser_launch.add_argument(
+        "-i",
+        "--configure-ipfs",
+        action="store_true",
+        help="Configure IPFS after launching service",
+    )
+
+    parser_launch.add_argument(
         "service",
         metavar="service",
-        choices=["creator-node", "discovery-provider"],
-        help="The service to launch (creator-node or discovery-provider)",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="The service to launch (creator-node, discovery-provider or identity)",
     )
 
     # set-config subcommand parser
@@ -470,8 +505,8 @@ def main():
     parser_set_config.add_argument(
         "service",
         metavar="service",
-        choices=["creator-node", "discovery-provider"],
-        help="The service to set a config value for (creator-node or discovery-provider)",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="The service to set a config value for (creator-node, discovery-provider or identity)",
     )
 
     parser_set_config.add_argument(
@@ -545,6 +580,7 @@ def main():
     elif args.operation == "launch":
         launch(
             args.service,
+            args.configure_ipfs,
             args.seed_job,
             args.manifests_path,
         )

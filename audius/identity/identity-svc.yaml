@@ -1,0 +1,35 @@
+---
+# Source: audius-identity-service/templates/backend-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-backend-svc
+  namespace: default
+spec:
+  ports:
+  - port: 7000
+    protocol: TCP
+  selector:
+    release: identity
+    tier: backend
+  type: NodePort
+
+
+---
+# Source: audius-identity-service/templates/cache-svc.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-cache-svc
+  namespace: default
+spec:
+  ports:
+  - port: 6379
+    protocol: TCP
+  selector:
+    release: identity
+    tier: cache
+
+
