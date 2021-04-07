@@ -215,7 +215,7 @@ def health_check(service):
         sys.exit(1)
 
 
-def launch(service, configure_ipfs, seed_job, manifests_path):
+def launch(service, configure_ipfs_flag, seed_job, manifests_path):
     """
     Function to launch a given service
 
@@ -294,7 +294,7 @@ def launch(service, configure_ipfs, seed_job, manifests_path):
             print("Restarting backend")
             subprocess.run(["kubectl", "delete", "pods", "-l", "tier=backend"])
 
-    if configure_ipfs:
+    if configure_ipfs_flag:
         print("Sleeping 60 seconds...")
         time.sleep(60)
         configure_ipfs(_get_ip_addr())
