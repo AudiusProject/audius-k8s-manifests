@@ -383,13 +383,13 @@ def upgrade(launch_flag, manifests_path):
 
         if "creator-node-backend-svc" in svc:
             print("Upgrading creator-node...")
-            launch("creator-node", False, manifests_path)
+            launch("creator-node", False, False, manifests_path)
         if "discovery-provider-backend-svc" in svc:
             print("Upgrading discovery-provider...")
-            launch("discovery-provider", False, manifests_path)
+            launch("discovery-provider", False, False, manifests_path)
         if "identity-backend-svc" in svc:
             print("Upgrading identity...")
-            launch("identity", False, manifests_path)
+            launch("identity", False, False, manifests_path)
 
 
 def main():
