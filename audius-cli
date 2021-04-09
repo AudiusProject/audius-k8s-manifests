@@ -123,8 +123,10 @@ def auto_upgrade(cron_expression, remove):
         for job in cron.find_comment("audius-cli auto-upgrade"):
             cron.remove(job)
         if not remove:
+            print(f'Setting auto-upgrade cadence [{cron_expression}]')
+            # Pipe the stdout and stderr to testCron3.txt
             job = cron.new(
-                "bash -c 'yes | audius-cli upgrade'",
+                "(bash -c 'yes | /usr/local/bin/audius-cli upgrade' 2>&1) >> testCron3.txt",
                 "audius-cli auto-upgrade",
             )
             job.setall(cron_expression)
@@ -356,25 +358,25 @@ def main():
     )
     subparser.required = True
 
-    # # auto-upgrade subcommand parser
-    # parser_auto_upgrade = subparser.add_parser(
-    #     "auto-upgrade",
-    #     help="Sets up a cron job to auto upgrade services",
-    # )
+    # auto-upgrade subcommand parser
+    parser_auto_upgrade = subparser.add_parser(
+        "auto-upgrade",
+        help="Sets up a cron job to auto upgrade services",
+    )
 
-    # parser_auto_upgrade.add_argument(
-    #     "cron_expression",
-    #     default="0 */6 * * *",
-    #     nargs="?",
-    #     help="Cron expression (default: every 6 hours)",
-    # )
+    parser_auto_upgrade.add_argument(
+        "cron_expression",
+        default="0 */6 * * *",
+        nargs="?",
+        help="Cron expression (default: every 6 hours)",
+    )
 
-    # parser_auto_upgrade.add_argument(
-    #     "-r",
-    #     "--remove",
-    #     action="store_true",
-    #     help="Remove auto-upgrade job",
-    # )
+    parser_auto_upgrade.add_argument(
+        "-r",
+        "--remove",
+        action="store_true",
+        help="Remove auto-upgrade job",
+    )
 
     # check subcommand parser
     parser_check_config = subparser.add_parser(
@@ -496,11 +498,11 @@ def main():
 
     args.manifests_path = os.path.abspath(args.manifests_path)
 
-    # if args.operation == "auto-upgrade":
-    #     auto_upgrade(
-    #         args.cron_expression,
-    #         args.remove,
-    #     )
+    if args.operation == "auto-upgrade":
+        auto_upgrade(
+            args.cron_expression,
+            args.remove,
+        )
     if args.operation == "check-config":
         check_config(
             args.service,
