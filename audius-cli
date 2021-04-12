@@ -144,15 +144,22 @@ def _kubectl_wait_seed_job():
     )
 
 
-def auto_upgrade(cron_expression, remove):
+def auto_upgrade(cron_expression, remove, manifests_path):
     """Function to setup a cron job that autoupgrades the node"""
     with CronTab(user=True) as cron:
         for job in cron.find_comment("audius-cli auto-upgrade"):
             cron.remove(job)
         if not remove:
-            # Pipe auto upgrade logs to auto_upgrade_logs.txt
+            # Create {manifests_path}/.logs dir if it does not exist
+            logs_dir_path = os.path.join(manifests_path, '.logs')
+            if not os.path.exists(logs_dir_path):
+                os.makedirs(logs_dir_path)
+                
+            # Pipe auto upgrade logs to {manifests_path}/.logs/auto_upgrade.txt
+            print(f'Setting auto-upgrade cadence [{cron_expression}]')
+            logs_file_path = os.path.join(logs_dir_path, 'auto_upgrade.txt') 
             job = cron.new(
-                "date >> auto_upgrade_logs.txt; (bash -c 'yes | /usr/local/bin/audius-cli upgrade' 2>&1) >> auto_upgrade_logs.txt; echo >> auto_upgrade_logs.txt",
+                f"date >> {logs_file_path}; (bash -c 'yes | /usr/local/bin/audius-cli upgrade' 2>&1) >> {logs_file_path}; echo >> {logs_file_path}",
                 "audius-cli auto-upgrade",
             )
             job.setall(cron_expression)
@@ -564,6 +571,7 @@ def main():
         auto_upgrade(
             args.cron_expression,
             args.remove,
+            args.manifests_path
         )
     if args.operation == "check-config":
         check_config(
