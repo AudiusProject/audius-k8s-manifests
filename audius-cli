@@ -144,14 +144,22 @@ def _kubectl_wait_seed_job():
     )
 
 
-def auto_upgrade(cron_expression, remove):
+def auto_upgrade(cron_expression, remove, manifests_path):
     """Function to setup a cron job that autoupgrades the node"""
     with CronTab(user=True) as cron:
         for job in cron.find_comment("audius-cli auto-upgrade"):
             cron.remove(job)
         if not remove:
+            # Create {manifests_path}/.logs dir if it does not exist
+            logs_dir_path = os.path.join(manifests_path, '.logs')
+            if not os.path.exists(logs_dir_path):
+                os.makedirs(logs_dir_path)
+                
+            # Pipe auto upgrade logs to {manifests_path}/.logs/auto_upgrade.txt
+            print(f'Setting auto-upgrade cadence [{cron_expression}]')
+            logs_file_path = os.path.join(logs_dir_path, 'auto_upgrade.txt') 
             job = cron.new(
-                "bash -c 'yes | audius-cli upgrade'",
+                f"date >> {logs_file_path}; (bash -c 'yes | /usr/local/bin/audius-cli upgrade' 2>&1) >> {logs_file_path}; echo >> {logs_file_path}",
                 "audius-cli auto-upgrade",
             )
             job.setall(cron_expression)
@@ -412,25 +420,25 @@ def main():
     )
     subparser.required = True
 
-    # # auto-upgrade subcommand parser
-    # parser_auto_upgrade = subparser.add_parser(
-    #     "auto-upgrade",
-    #     help="Sets up a cron job to auto upgrade services",
-    # )
+    # auto-upgrade subcommand parser
+    parser_auto_upgrade = subparser.add_parser(
+        "auto-upgrade",
+        help="Sets up a cron job to auto upgrade services",
+    )
 
-    # parser_auto_upgrade.add_argument(
-    #     "cron_expression",
-    #     default="0 */6 * * *",
-    #     nargs="?",
-    #     help="Cron expression (default: every 6 hours)",
-    # )
+    parser_auto_upgrade.add_argument(
+        "cron_expression",
+        default="0 */6 * * *",
+        nargs="?",
+        help="Cron expression (default: every 6 hours)",
+    )
 
-    # parser_auto_upgrade.add_argument(
-    #     "-r",
-    #     "--remove",
-    #     action="store_true",
-    #     help="Remove auto-upgrade job",
-    # )
+    parser_auto_upgrade.add_argument(
+        "-r",
+        "--remove",
+        action="store_true",
+        help="Remove auto-upgrade job",
+    )
 
     # check subcommand parser
     parser_check_config = subparser.add_parser(
@@ -559,11 +567,12 @@ def main():
 
     args.manifests_path = os.path.abspath(args.manifests_path)
 
-    # if args.operation == "auto-upgrade":
-    #     auto_upgrade(
-    #         args.cron_expression,
-    #         args.remove,
-    #     )
+    if args.operation == "auto-upgrade":
+        auto_upgrade(
+            args.cron_expression,
+            args.remove,
+            args.manifests_path
+        )
     if args.operation == "check-config":
         check_config(
             args.service,
