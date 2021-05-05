@@ -1,3 +1,4 @@
+const axios = require('axios')
 const Web3 = require('web3')
 const HDWalletProvider = require('@truffle/hdwallet-provider')
 const { program } = require('commander')
@@ -20,6 +21,16 @@ async function configureLibs(ethRegistryAddress, ethTokenAddress, web3Provider) 
   await libs.init()
 
   return libs
+}
+
+async function getGasPrice() {
+  try {
+    const gasPrices = await axios.get('https://ethgasstation.info/json/ethgasAPI.json');
+    return Web3.utils.toWei((gasPrices.data.fastest / 10).toString(), 'gwei');
+  } catch (err) {
+    console.error(`Got ${err} when trying to fetch gas from ethgasstation.info, falling back web3's gas estimation`)
+    return (await Web3.eth.getGasPrice()).toString();
+  }
 }
 
 async function getClaimsManagerContract(ethRegistryAddress, ethTokenAddress, web3) {
@@ -67,7 +78,7 @@ async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, 
   await claimsManagerContract.methods.initiateRound().send({
     from: accountAddress,
     gas,
-    gasPrice: gasPrice ? web3.utils.toWei(gasPrice, 'gwei') : (await web3.eth.getGasPrice()).toString(),
+    gasPrice: gasPrice ? web3.utils.toWei(gasPrice, 'gwei') : (await getGasPrice()),
   })
   console.log('Successfully initiated Round')
 }
@@ -96,7 +107,7 @@ async function claimRewards(
     await delegateManagerContract.methods.claimRewards(spOwnerWallet).send({
       from: accountAddress,
       gas,
-      gasPrice: gasPrice ? web3.utils.toWei(gasPrice, 'gwei') : (await web3.eth.getGasPrice()).toString(),
+      gasPrice: gasPrice ? web3.utils.toWei(gasPrice, 'gwei') : (await getGasPrice()),
     })
     console.log('Claimed Rewards successfully')
   } else {
