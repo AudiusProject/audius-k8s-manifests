@@ -151,13 +151,13 @@ def auto_upgrade(cron_expression, remove, manifests_path):
             cron.remove(job)
         if not remove:
             # Create {manifests_path}/.logs dir if it does not exist
-            logs_dir_path = os.path.join(manifests_path, '.logs')
+            logs_dir_path = os.path.join(manifests_path, ".logs")
             if not os.path.exists(logs_dir_path):
                 os.makedirs(logs_dir_path)
-                
+
             # Pipe auto upgrade logs to {manifests_path}/.logs/auto_upgrade.txt
-            print(f'Setting auto-upgrade cadence [{cron_expression}]')
-            logs_file_path = os.path.join(logs_dir_path, 'auto_upgrade.txt') 
+            print(f"Setting auto-upgrade cadence [{cron_expression}]")
+            logs_file_path = os.path.join(logs_dir_path, "auto_upgrade.txt")
             job = cron.new(
                 f"date >> {logs_file_path}; (bash -c 'yes | /usr/local/bin/audius-cli upgrade' 2>&1) >> {logs_file_path}; echo >> {logs_file_path}",
                 "audius-cli auto-upgrade",
@@ -278,6 +278,7 @@ def launch(service, configure_ipfs_flag, seed_job, manifests_path):
             print("Sleeping 60 seconds...")
             time.sleep(60)
             _kubectl_apply("discovery-provider", "deploy-no-workers", manifests_path)
+            time.sleep(60)
             _kubectl_apply("discovery-provider", "db-seed-job", manifests_path)
 
         print("Waiting for seed job to complete if running this might take a while")
@@ -306,6 +307,47 @@ def launch(service, configure_ipfs_flag, seed_job, manifests_path):
         print("Sleeping 60 seconds...")
         time.sleep(60)
         configure_ipfs(_get_ip_addr())
+
+
+def logs(service, pod, container):
+    """Show logs for provided pod"""
+    name = json.loads(
+        subprocess.run(
+            [
+                "kubectl",
+                "get",
+                "pods",
+                "-l",
+                f"release={service}",
+                "-l",
+                f"tier={pod}",
+                "-o",
+                "json",
+            ],
+            stdout=subprocess.PIPE,
+        ).stdout
+    )["items"][0]["metadata"]["name"]
+
+    print(
+        "\n".join(
+            subprocess.run(
+                ["kubectl", "logs", name]
+                + ([container] if container else [])
+                + ["--tail", "10"],
+                stdout=subprocess.PIPE,
+            )
+            .stdout.decode()
+            .splitlines()
+        )
+    )
+
+
+def restart(service, pod):
+    """Restart provided pod"""
+    # TODO: use service
+    subprocess.run(
+        ["kubectl", "delete", "pods", "-l", f"tier={pod}"],
+    )
 
 
 def set_config(service, pod, manifests_path):
@@ -504,6 +546,48 @@ def main():
         help="The service to launch (creator-node, discovery-provider or identity)",
     )
 
+    # logs subcommand parser
+    parser_logs = subparser.add_parser(
+        "logs",
+        help="Show logs for provided pod",
+    )
+
+    parser_logs.add_argument(
+        "service",
+        metavar="service",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="The service to get logs for (creator-node, discovery-provider or identity)",
+    )
+
+    parser_logs.add_argument(
+        "pod",
+        help="The pod to get logs for (backend, db, etc.)",
+    )
+
+    parser_logs.add_argument(
+        "container",
+        nargs="?",
+        help="The container to get logs for (server, celery, beat etc.)",
+    )
+
+    # restart subcommand parser
+    parser_restart = subparser.add_parser(
+        "restart",
+        help="Restart provided pod",
+    )
+
+    parser_restart.add_argument(
+        "service",
+        metavar="service",
+        choices=["creator-node", "discovery-provider", "identity"],
+        help="The service which contain the pod (creator-node, discovery-provider or identity)",
+    )
+
+    parser_restart.add_argument(
+        "pod",
+        help="The pod to restart (backend, db, etc.)",
+    )
+
     # set-config subcommand parser
     parser_set_config = subparser.add_parser(
         "set-config",
@@ -571,7 +655,7 @@ def main():
         auto_upgrade(
             args.cron_expression,
             args.remove,
-            args.manifests_path
+            args.manifests_path,
         )
     if args.operation == "check-config":
         check_config(
@@ -592,6 +676,18 @@ def main():
             args.configure_ipfs,
             args.seed_job,
             args.manifests_path,
+        )
+    elif args.operation == "logs":
+        logs(
+            args.service,
+            args.pod,
+            args.container,
+        )
+    elif args.operation == "restart":
+        # TODO: acutally use service parameter
+        restart(
+            args.service,
+            args.pod,
         )
     elif args.operation == "set-config":
         set_config(
