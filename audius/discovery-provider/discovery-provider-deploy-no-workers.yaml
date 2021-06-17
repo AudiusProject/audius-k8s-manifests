@@ -155,7 +155,7 @@ spec:
       
       containers:
       - name: discovery-provider-ipfs
-        image: ipfs/go-ipfs:v0.4.23
+        image: ipfs/go-ipfs:v0.8.0
         ports:
         - name: swarm
           containerPort: 4001
@@ -169,7 +169,7 @@ spec:
           subPath: discovery-provider-ipfs
       initContainers:
       - name: init
-        image: ipfs/go-ipfs:v0.4.23
+        image: ipfs/go-ipfs:v0.8.0
         command: ["sh", "/scripts/ipfs-remove-lock.sh"]
         volumeMounts:
         - name: discovery-provider-ipfs-pv
