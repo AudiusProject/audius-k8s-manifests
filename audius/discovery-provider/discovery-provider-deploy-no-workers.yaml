@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:0e626ee3a4cce416843e08a72043f599f90cb9a3
+        image: audius/discovery-provider:1013ccd44bed872be514cb91faa9af4532a9fdf5
         
         envFrom:
         - configMapRef:
@@ -155,7 +155,7 @@ spec:
       
       containers:
       - name: discovery-provider-ipfs
-        image: ipfs/go-ipfs:v0.4.23
+        image: ipfs/go-ipfs:v0.8.0
         ports:
         - name: swarm
           containerPort: 4001
@@ -169,7 +169,7 @@ spec:
           subPath: discovery-provider-ipfs
       initContainers:
       - name: init
-        image: ipfs/go-ipfs:v0.4.23
+        image: ipfs/go-ipfs:v0.8.0
         command: ["sh", "/scripts/ipfs-remove-lock.sh"]
         volumeMounts:
         - name: discovery-provider-ipfs-pv
