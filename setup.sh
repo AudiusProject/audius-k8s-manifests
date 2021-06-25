@@ -42,6 +42,13 @@ echo 'alias k=kubectl' >>~/.bashrc
 sudo mkdir -p /var/k8s
 sudo chown $(id -u):$(id -g) /var/k8s
 
+# install psql 11
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+RELEASE=$(lsb_release -cs)
+echo "deb http://apt.postgresql.org/pub/repos/apt/ ${RELEASE}"-pgdg main | sudo tee /etc/apt/sources.list.d/pgdg.list
+sudo apt update
+sudo apt -y install postgresql-11
+
 # audius-cli init
 chmod +x $(dirname $(readlink -f "$0"))/audius-cli
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli

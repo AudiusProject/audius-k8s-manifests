@@ -13,7 +13,6 @@ data:
   redisHost: "identity-cache-svc.default.svc.cluster.local"
   redisPort: "6379"
   blacklisterPublicKey: "0xfeebEA99dE524ac668B6f151177EcA60b30A09c9"
-  ethNetworkId: "1557772555559"
   ethOwnerWallet: "0x3eC41B55D9A1Edd593Ef38493d8125DeB4EE03a9"
   ethProviderUrl: ""
   ethRegistryAddress: "0xa0fd5C42F81CC35aa66E5f8Ee85098fF7D669fa6"
