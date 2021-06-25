@@ -655,7 +655,7 @@ def main():
         auto_upgrade(
             args.cron_expression,
             args.remove,
-            args.manifests_path,
+            args.manifests_path
         )
     if args.operation == "check-config":
         check_config(
