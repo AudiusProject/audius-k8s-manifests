@@ -354,20 +354,25 @@ def set_config(service, pod, manifests_path):
     """Function to set the config values of a service"""
     config_file = os.path.join(manifests_path, "config.yaml")
 
-    key = input("\033[1mkey   :\033[0m ")
-    value = input("\033[1mvalue :\033[0m ")
+    if service and not pod:
+        print("pod must be provided when service is set", file=sys.stderr)
+        sys.exit(1)
 
-    config = {}
-    if os.path.isfile(config_file):
-        with open(config_file, "r") as stream:
-            config = yaml.safe_load(stream) or {}
+    if service and pod:
+        key = input("\033[1mkey   :\033[0m ")
+        value = input("\033[1mvalue :\033[0m ")
 
-    config[service] = config[service] if service in config else {}
-    config[service][pod] = config[service][pod] if pod in config[service] else {}
-    config[service][pod][key] = value
+        config = {}
+        if os.path.isfile(config_file):
+            with open(config_file, "r") as stream:
+                config = yaml.safe_load(stream) or {}
 
-    with open(config_file, "w") as stream:
-        yaml.safe_dump(config, stream)
+        config[service] = config[service] if service in config else {}
+        config[service][pod] = config[service][pod] if pod in config[service] else {}
+        config[service][pod][key] = value
+
+        with open(config_file, "w") as stream:
+            yaml.safe_dump(config, stream)
 
     print("Updating config maps")
     _apply_config(manifests_path)
@@ -397,7 +402,7 @@ def set_tag(tag, manifests_path):
     print(_git_log("AudiusProject/audius-protocol", tag, 10))
 
 
-def upgrade(launch_flag, manifests_path):
+def upgrade(launch_flag, branch, manifests_path):
     """
     Function to upgrade the node from github
 
@@ -407,15 +412,28 @@ def upgrade(launch_flag, manifests_path):
       - Call the launch function, this applies the config maps and restarts with the new configs.
     """
 
+    subprocess.run(["git", "fetch"], cwd=manifests_path)
+
     for file in [
         "audius/creator-node/creator-node-cm.yaml",
         "audius/discovery-provider/discovery-provider-cm.yaml",
         "audius/identity/identity-cm.yaml",
+        "audius/creator-node/creator-node-deploy-backend.yaml",
+        "audius/discovery-provider/discovery-provider-deploy.yaml",
+        "audius/discovery-provider/discovery-provider-deploy-no-workers.yaml",
+        "audius/identity/identity-deploy.yaml",
     ]:
         print(f"Reverting {file}")
         proc = subprocess.run(["git", "checkout", "--", file], cwd=manifests_path)
         if proc.returncode != 0:
             print(f"Unable to revert {file}", file=sys.stderr)
+            sys.exit(1)
+
+    if branch:
+        print("Checking out to provided branch")
+        proc = subprocess.run(["git", "checkout", branch], cwd=manifests_path)
+        if proc.returncode != 0:
+            print("Unable to checkout to given branch", file=sys.stderr)
             sys.exit(1)
 
     print("Pulling changes from source")
@@ -426,6 +444,8 @@ def upgrade(launch_flag, manifests_path):
 
     print("Updating config maps")
     _apply_config(manifests_path)
+
+    subprocess.run([os.path.join(manifests_path, "post-pull.sh")])
 
     # if flag is set then relaunch nodes
     if launch_flag:
@@ -591,11 +611,12 @@ def main():
     # set-config subcommand parser
     parser_set_config = subparser.add_parser(
         "set-config",
-        help="Set a config option",
+        help="Set a config option, if no args are provided then updates config maps with values from the config file",
     )
 
     parser_set_config.add_argument(
         "service",
+        nargs="?",
         metavar="service",
         choices=["creator-node", "discovery-provider", "identity"],
         help="The service to set a config value for (creator-node, discovery-provider or identity)",
@@ -603,6 +624,7 @@ def main():
 
     parser_set_config.add_argument(
         "pod",
+        nargs="?",
         help="The pod to set a config value for (backend, db, etc.)",
     )
 
@@ -623,10 +645,22 @@ def main():
         help="Pulls from source and relaunches with latest version of audius-k8s-manifests",
     )
 
+    parser_upgrade.add_argument(
+        "branch",
+        nargs="?",
+        help="Branch to use, if not provided will use the current branch",
+    )
+
     # upgrade subcommand parser
     parser_pull = subparser.add_parser(
         "pull",
         help="Pulls from source and updates audius-k8s-manifests",
+    )
+
+    parser_pull.add_argument(
+        "branch",
+        nargs="?",
+        help="Branch to pull from, if not provided will use the current branch",
     )
 
     if len(sys.argv) == 1:
@@ -652,11 +686,7 @@ def main():
     args.manifests_path = os.path.abspath(args.manifests_path)
 
     if args.operation == "auto-upgrade":
-        auto_upgrade(
-            args.cron_expression,
-            args.remove,
-            args.manifests_path
-        )
+        auto_upgrade(args.cron_expression, args.remove, args.manifests_path)
     if args.operation == "check-config":
         check_config(
             args.service,
@@ -703,11 +733,13 @@ def main():
     elif args.operation == "upgrade":
         upgrade(
             True,
+            args.branch,
             args.manifests_path,
         )
     elif args.operation == "pull":
         upgrade(
             False,
+            args.branch,
             args.manifests_path,
         )
 
