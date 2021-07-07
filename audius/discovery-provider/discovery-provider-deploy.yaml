@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:78a5b0a3caf50d6001f629c2844a9edd06519949
+        image: audius/discovery-provider:a3f54f1d76b821dc8c519816c5e6ad57a46d923d
         
         envFrom:
         - configMapRef:
@@ -49,7 +49,7 @@ spec:
       - name: worker
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:78a5b0a3caf50d6001f629c2844a9edd06519949
+        image: audius/discovery-provider:a3f54f1d76b821dc8c519816c5e6ad57a46d923d
         
         envFrom:
         - configMapRef:
@@ -61,7 +61,7 @@ spec:
       - name: beat
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:78a5b0a3caf50d6001f629c2844a9edd06519949
+        image: audius/discovery-provider:a3f54f1d76b821dc8c519816c5e6ad57a46d923d
         
         envFrom:
         - configMapRef:
@@ -128,6 +128,11 @@ spec:
       containers:
       - name: postgres
         image: postgres:11.4
+        args:
+          - -c
+          - shared_buffers=256MB
+          - -c
+          - max_connections=300
         envFrom:
         - configMapRef:
             name: discovery-provider-db-cm
