@@ -50,6 +50,7 @@ sudo apt update
 sudo apt -y install postgresql-11
 
 # audius-cli init
+chmod +x $(dirname $(readlink -f "$0"))/post-pull.sh
 chmod +x $(dirname $(readlink -f "$0"))/audius-cli
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py

@@ -32,7 +32,7 @@ data:
   keepAliveTimeout: "5000"
   logLevel: "info"
   maxAudioFileSizeBytes: "1000000000"
-  pinAddCIDs: "QmT81uesN6ZBuE4ynQbwAqrQ4FnbnotVY97kaR9NPizqjy,QmTXbugkNc9V3V2tSuLPVNH5LWZtuej6tVbELt6k5UHwVi"
+  pinAddCIDs: "QmbjPd2eJNLYwS3w7tXRmxGS9jMg2JrVk4boK13scgCL6x,Qmb82t7NpiPnTETBwFWzJrNVwibywd1SYFcSkUUxdvM3pA"
   setTimeout: "3600000"
   spOwnerWallet: "<SEE_README>"
   timeout: "3600000"
