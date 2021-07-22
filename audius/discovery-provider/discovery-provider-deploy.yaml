@@ -43,33 +43,8 @@ spec:
           failureThreshold: 5
           timeoutSeconds: 6
         
-        command: ["sh", "-c", "./scripts/prod-server.sh"]
+        command: ["sh", "-c", "./scripts/start.sh"]
         
-        
-      - name: worker
-        imagePullPolicy: Always
-        
-        image: audius/discovery-provider:3c8e863870b34a4fc8e190ca7b7224b07ea6ad1a
-        
-        envFrom:
-        - configMapRef:
-            name: discovery-provider-backend-cm
-        
-        ports:
-        - containerPort: 5000
-        command: ["sh", "-c", "celery -A src.worker.celery worker --loglevel info"]
-      - name: beat
-        imagePullPolicy: Always
-        
-        image: audius/discovery-provider:3c8e863870b34a4fc8e190ca7b7224b07ea6ad1a
-        
-        envFrom:
-        - configMapRef:
-            name: discovery-provider-backend-cm
-        
-        ports:
-        - containerPort: 5000
-        command: ["sh", "-c", "celery -A src.worker.celery beat"]
       
 
 

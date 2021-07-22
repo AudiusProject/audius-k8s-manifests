@@ -97,6 +97,31 @@ def _is_identity_healthy(health_check_resp):
     return health_check_resp["healthy"]
 
 
+def _is_healthy(service):
+    """Function to check whether a given service is healthy"""
+    for item in _kubectl_get_svc()["items"]:
+        if item["metadata"]["name"] == f"{service}-backend-svc":
+            port = item["spec"]["ports"][0]["nodePort"]
+            url = f"http://localhost:{port}/health_check"
+
+            resp = {}
+            try:
+                resp = json.load(urllib.request.urlopen(url))
+                healthy = False
+                if service == "creator-node":
+                    healthy = _is_creator_node_healthy(resp)
+                elif service == "discovery-provider":
+                    healthy = _is_discovery_provider_healthy(resp)
+                elif service == "identity":
+                    healthy = _is_identity_healthy(resp)
+            except urllib.error.HTTPError:
+                healthy = False
+
+            return healthy
+
+    return False
+
+
 def _kubectl_apply(service, manifest, manifests_path):
     subprocess.run(
         [
@@ -273,10 +298,14 @@ def launch(service, configure_ipfs_flag, seed_job, manifests_path):
         _kubectl_apply("discovery-provider", "cm", manifests_path)
         _kubectl_apply("discovery-provider", "svc", manifests_path)
         _kubectl_apply("discovery-provider", "pvc", manifests_path)
+        _kubectl_apply("discovery-provider", "deploy", manifests_path)
+
+        print("Waiting for discovery-provider health check...")
+        while not _is_healthy("discovery-provider"):
+            time.sleep(5)
 
         if seed_job:
             print("Sleeping 60 seconds...")
-            time.sleep(60)
             _kubectl_apply("discovery-provider", "deploy-no-workers", manifests_path)
             time.sleep(60)
             _kubectl_apply("discovery-provider", "db-seed-job", manifests_path)
