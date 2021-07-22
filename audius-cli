@@ -83,12 +83,12 @@ def _git_log(repo, commit, count):
 
 
 def _is_creator_node_healthy(health_check_resp):
-    return health_check_resp["healthy"]
+    return health_check_resp["data"]["healthy"]
 
 
 def _is_discovery_provider_healthy(health_check_resp):
     return (
-        health_check_resp["block_difference"]
+        health_check_resp["data"]["block_difference"]
         < health_check_resp["data"]["maximum_healthy_block_difference"]
     )
 
