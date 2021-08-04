@@ -188,7 +188,7 @@ def configure_ipfs(hostname):
     )
 
 
-def health_check(service):
+def health_check(service, cmd=True):
     """Function to check whether a given service is healthy"""
     service_running = False
 
@@ -211,10 +211,16 @@ def health_check(service):
             except urllib.error.HTTPError:
                 healthy = False
 
-            print("Reponse: ")
-            print(json.dumps(resp, sort_keys=True, indent=4))
-            print()
-            print(f"{service} is {'healthy' if healthy else 'not healthy'}")
+            if cmd:
+                print("Reponse: ")
+                print(json.dumps(resp, sort_keys=True, indent=4))
+                print()
+                print(f"{service} is {'healthy' if healthy else 'not healthy'}")
+            else:
+                return healthy
+
+    if not cmd:
+        return False
 
     if not service_running:
         print(
@@ -273,10 +279,13 @@ def launch(service, configure_ipfs_flag, seed_job, manifests_path):
         _kubectl_apply("discovery-provider", "cm", manifests_path)
         _kubectl_apply("discovery-provider", "svc", manifests_path)
         _kubectl_apply("discovery-provider", "pvc", manifests_path)
+        _kubectl_apply("discovery-provider", "deploy", manifests_path)
+
+        print("Waiting for discovery-provider health check...")
+        while not health_check("discovery-provider", cmd=False):
+            time.sleep(5)
 
         if seed_job:
-            print("Sleeping 60 seconds...")
-            time.sleep(60)
             _kubectl_apply("discovery-provider", "deploy-no-workers", manifests_path)
             time.sleep(60)
             _kubectl_apply("discovery-provider", "db-seed-job", manifests_path)
@@ -350,17 +359,15 @@ def restart(service, pod):
     )
 
 
-def set_config(service, pod, manifests_path):
+def set_config(service, pod, manifests_path, key, value):
     """Function to set the config values of a service"""
     config_file = os.path.join(manifests_path, "config.yaml")
 
-    if service and not pod:
-        print("pod must be provided when service is set", file=sys.stderr)
-        sys.exit(1)
-
     if service and pod:
-        key = input("\033[1mkey   :\033[0m ")
-        value = input("\033[1mvalue :\033[0m ")
+        if key is None:
+            key = input("\033[1mkey   :\033[0m ")
+        if value is None:
+            value = input("\033[1mvalue :\033[0m ")
 
         config = {}
         if os.path.isfile(config_file):
@@ -625,7 +632,18 @@ def main():
     parser_set_config.add_argument(
         "pod",
         nargs="?",
+        default="backend",
         help="The pod to set a config value for (backend, db, etc.)",
+    )
+
+    parser_set_config.add_argument(
+        "--key",
+        help="The config key to set",
+    )
+
+    parser_set_config.add_argument(
+        "--value",
+        help="The value to set for the config key",
     )
 
     # set-tag subcommand parser
@@ -724,6 +742,8 @@ def main():
             args.service,
             args.pod,
             args.manifests_path,
+            args.key,
+            args.value,
         )
     elif args.operation == "set-tag":
         set_tag(
