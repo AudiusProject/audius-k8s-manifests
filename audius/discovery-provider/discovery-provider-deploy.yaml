@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:61bc1a9dd495608c900e2e481a3b9f07433282f0
+        image: audius/discovery-provider:4cb22acc4353fba521cdb8945dbc8243764da9df
         
         envFrom:
         - configMapRef:
@@ -49,7 +49,7 @@ spec:
       - name: worker
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:61bc1a9dd495608c900e2e481a3b9f07433282f0
+        image: audius/discovery-provider:4cb22acc4353fba521cdb8945dbc8243764da9df
         
         envFrom:
         - configMapRef:
@@ -61,7 +61,7 @@ spec:
       - name: beat
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:61bc1a9dd495608c900e2e481a3b9f07433282f0
+        image: audius/discovery-provider:4cb22acc4353fba521cdb8945dbc8243764da9df
         
         envFrom:
         - configMapRef:
