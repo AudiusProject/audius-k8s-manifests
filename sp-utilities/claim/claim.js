@@ -59,6 +59,7 @@ async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, 
     })
   )
 
+  web3.eth.transactionPollingTimeout = 3600
   const accountAddress = web3.eth.accounts.privateKeyToAccount(privateKey).address
 
   const claimsManagerContract = await getClaimsManagerContract(ethRegistryAddress, ethTokenAddress, web3)
@@ -67,7 +68,7 @@ async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, 
   const requiredBlockDiff = await claimsManagerContract.methods.getFundingRoundBlockDiff().call()
 
   const currentBlock = await web3.eth.getBlockNumber()
-  const blockDiff = currentBlock - lastFundedBlock
+  const blockDiff = currentBlock - lastFundedBlock - 12
 
   if (blockDiff <= requiredBlockDiff) {
     console.log(`Block difference of ${requiredBlockDiff} not met, ${requiredBlockDiff - blockDiff} blocks remaining`)
@@ -95,6 +96,7 @@ async function claimRewards(
     })
   )
 
+  web3.eth.transactionPollingTimeout = 3600
   const accountAddress = web3.eth.accounts.privateKeyToAccount(privateKey).address
 
   const claimsManagerContract = await getClaimsManagerContract(ethRegistryAddress, ethTokenAddress, web3)

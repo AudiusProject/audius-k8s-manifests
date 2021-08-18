@@ -76,7 +76,7 @@ def _git_log(repo, commit, count):
     for commit in resp:
         sha = commit["sha"][0:8]
         msg = commit["commit"]["message"].split("\n")[0]
-        author = commit["author"]["login"]
+        author = commit["committer"]["login"]
         ret.append(f"[{sha}] {msg} {author}")
 
     return "\n".join(ret)
@@ -340,9 +340,8 @@ def logs(service, pod, container):
     print(
         "\n".join(
             subprocess.run(
-                ["kubectl", "logs", name]
-                + ([container] if container else [])
-                + ["--tail", "10"],
+                ["kubectl", "logs", "--tail", "10", name]
+                + ([container] if container else []),
                 stdout=subprocess.PIPE,
             )
             .stdout.decode()
@@ -353,9 +352,15 @@ def logs(service, pod, container):
 
 def restart(service, pod):
     """Restart provided pod"""
-    # TODO: use service
     subprocess.run(
-        ["kubectl", "delete", "pods", "-l", f"tier={pod}"],
+        [
+            "kubectl",
+            "delete",
+            "pods",
+            "-l",
+            f"release={service}" "-l",
+            f"tier={pod}",
+        ],
     )
 
 
@@ -486,8 +491,8 @@ def main():
     subparser = parser.add_subparsers(
         title="operations",
         dest="operation",
+        required=True,
     )
-    subparser.required = True
 
     # auto-upgrade subcommand parser
     parser_auto_upgrade = subparser.add_parser(
@@ -732,7 +737,6 @@ def main():
             args.container,
         )
     elif args.operation == "restart":
-        # TODO: acutally use service parameter
         restart(
             args.service,
             args.pod,
