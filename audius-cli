@@ -86,11 +86,14 @@ def _is_creator_node_healthy(health_check_resp):
     return health_check_resp["data"]["healthy"]
 
 
-def _is_discovery_provider_healthy(health_check_resp):
-    return (
-        health_check_resp["data"]["block_difference"]
-        < health_check_resp["data"]["maximum_healthy_block_difference"]
-    )
+def _is_discovery_provider_healthy(health_check_resp, strict):
+    if strict:
+        return (
+            health_check_resp["data"]["block_difference"]
+            < health_check_resp["data"]["maximum_healthy_block_difference"]
+        )
+    else:
+        return "block_difference" in health_check_resp["data"]
 
 
 def _is_identity_healthy(health_check_resp):
@@ -192,32 +195,35 @@ def health_check(service, cmd=True):
     """Function to check whether a given service is healthy"""
     service_running = False
 
-    for item in _kubectl_get_svc()["items"]:
-        if item["metadata"]["name"] == f"{service}-backend-svc":
-            service_running = True
-            port = item["spec"]["ports"][0]["nodePort"]
-            url = f"http://localhost:{port}/health_check"
+    try:
+        for item in _kubectl_get_svc()["items"]:
+            if item["metadata"]["name"] == f"{service}-backend-svc":
+                service_running = True
+                port = item["spec"]["ports"][0]["nodePort"]
+                url = f"http://localhost:{port}/health_check"
 
-            resp = {}
-            try:
-                resp = json.load(urllib.request.urlopen(url))
-                healthy = False
-                if service == "creator-node":
-                    healthy = _is_creator_node_healthy(resp)
-                elif service == "discovery-provider":
-                    healthy = _is_discovery_provider_healthy(resp)
-                elif service == "identity":
-                    healthy = _is_identity_healthy(resp)
-            except urllib.error.HTTPError:
-                healthy = False
+                resp = {}
+                try:
+                    resp = json.load(urllib.request.urlopen(url))
+                    healthy = False
+                    if service == "creator-node":
+                        healthy = _is_creator_node_healthy(resp)
+                    elif service == "discovery-provider":
+                        healthy = _is_discovery_provider_healthy(resp, cmd)
+                    elif service == "identity":
+                        healthy = _is_identity_healthy(resp)
+                except urllib.error.HTTPError:
+                    healthy = False
 
-            if cmd:
-                print("Reponse: ")
-                print(json.dumps(resp, sort_keys=True, indent=4))
-                print()
-                print(f"{service} is {'healthy' if healthy else 'not healthy'}")
-            else:
-                return healthy
+                if cmd:
+                    print("Reponse: ")
+                    print(json.dumps(resp, sort_keys=True, indent=4))
+                    print()
+                    print(f"{service} is {'healthy' if healthy else 'not healthy'}")
+                else:
+                    return healthy
+    except Exception as e:
+        pass
 
     if not cmd:
         return False
