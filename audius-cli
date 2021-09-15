@@ -9,6 +9,7 @@ import subprocess
 import sys
 import urllib.request
 
+import psutil
 import yaml
 from crontab import CronTab
 
@@ -253,6 +254,17 @@ def launch(service, configure_ipfs_flag, seed_job, manifests_path):
             print(f"{config_map} has unset keys: {', '.join(unset)}", file=sys.stderr)
     else:
         print("All config keys seem to be set.")
+
+    total_memory = psutil.virtual_memory().total / (1024 ** 3)
+    cpu_count = psutil.cpu_count()
+
+    print(f"CPUs: {cpu_count} (at least 8 recommend)")
+    print(f"RAM:  {total_memory} GB (at least 16 GB recommend)")
+
+    if cpu_count < 8 or total_memory < 16:
+        print("System does not meet recommend requirements")
+    else:
+        print("System meets recommend requirements")
 
     # prompt for user confirmation
     if not input("Do you want to continue? [y/N] ").lower().startswith("y"):
