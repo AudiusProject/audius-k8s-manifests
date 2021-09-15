@@ -26,7 +26,7 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 
-sudo cat >/etc/docker/daemon.json <<EOF
+sudo sh -c "cat >/etc/docker/daemon.json" <<EOF
 {
   "log-driver": "json-file",
   "log-opts": {
@@ -66,7 +66,7 @@ chmod +x $(dirname $(readlink -f "$0"))/audius-cli
 sudo ln -sf $(dirname $(readlink -f "$0"))/audius-cli /usr/local/bin/audius-cli
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python3.8 get-pip.py --force-reinstall
-python3.8 -m pip install --user python-crontab pyyaml
+python3.8 -m pip install --user python-crontab pyyaml psutil
 rm get-pip.py
 
 # reboot for good measure
