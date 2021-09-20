@@ -20,18 +20,18 @@ spec:
       annotations:
         checksum/config: 720c43ab8607398207813cac2e0917ec37181a837d7229401be5fb99ee255af3
     spec:
-      
-      
+
+
       containers:
       - name: server
         imagePullPolicy: Always
-        
+
         image: audius/discovery-provider:912bc1ac402b12ed1b38a68ea24583d7b2d1288a
-        
+
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
-        
+
         ports:
         - containerPort: 5000
         livenessProbe:
@@ -42,35 +42,35 @@ spec:
           periodSeconds: 10
           failureThreshold: 5
           timeoutSeconds: 6
-        
+
         command: ["sh", "-c", "./scripts/prod-server.sh"]
-        
-        
+
+
       - name: worker
         imagePullPolicy: Always
-        
+
         image: audius/discovery-provider:912bc1ac402b12ed1b38a68ea24583d7b2d1288a
-        
+
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
-        
+
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "celery -A src.worker.celery worker --loglevel info"]
       - name: beat
         imagePullPolicy: Always
-        
+
         image: audius/discovery-provider:912bc1ac402b12ed1b38a68ea24583d7b2d1288a
-        
+
         envFrom:
         - configMapRef:
             name: discovery-provider-backend-cm
-        
+
         ports:
         - containerPort: 5000
         command: ["sh", "-c", "celery -A src.worker.celery beat"]
-      
+
 
 
 ---
@@ -93,7 +93,7 @@ spec:
         release: discovery-provider
         tier: cache
     spec:
-      
+
       containers:
       - name: discovery-provider-cache
         image: redis:5.0.5
@@ -116,7 +116,7 @@ spec:
       release: discovery-provider
       tier: db
   replicas: 1
-  
+
   template:
     metadata:
       labels:
@@ -133,6 +133,8 @@ spec:
           - shared_buffers=256MB
           - -c
           - max_connections=300
+          - -c
+          - shared_preload_libraries=pg_stat_statements
         envFrom:
         - configMapRef:
             name: discovery-provider-db-cm
@@ -168,20 +170,20 @@ spec:
     matchLabels:
       release: discovery-provider
       tier: ipfs
-      
+
   replicas: 1
-  
+
   template:
     metadata:
       labels:
         release: discovery-provider
         tier: ipfs
-        
+
       annotations:
         checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
     spec:
-      
-      
+
+
       containers:
       - name: discovery-provider-ipfs
         image: ipfs/go-ipfs:v0.8.0
@@ -209,10 +211,10 @@ spec:
           subPath: ipfs-remove-lock.sh
       volumes:
       - name: discovery-provider-ipfs-pv
-        
+
         persistentVolumeClaim:
           claimName: discovery-provider-ipfs-pvc
-        
+
       - name: ipfs-cm
         configMap:
           name: discovery-provider-ipfs-cm
