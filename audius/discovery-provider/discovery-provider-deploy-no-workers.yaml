@@ -109,6 +109,8 @@ spec:
           - shared_buffers=256MB
           - -c
           - max_connections=300
+          - -c
+          - shared_preload_libraries=pg_stat_statements
         envFrom:
         - configMapRef:
             name: discovery-provider-db-cm
