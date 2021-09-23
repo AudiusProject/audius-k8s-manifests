@@ -52,7 +52,7 @@ spec:
       
       containers:
       - name: creator-node-ipfs
-        image: ipfs/go-ipfs:v0.8.0
+        image: ipfs/go-ipfs:v0.9.1
         args: ["daemon", "--migrate=true", "--enable-gc=true"]
         livenessProbe:
           exec:
@@ -75,7 +75,7 @@ spec:
       restartPolicy: Always
       initContainers:
       - name: init
-        image: ipfs/go-ipfs:v0.8.0
+        image: ipfs/go-ipfs:v0.9.1
         command: ["sh", "-c", "./scripts/ipfs-remove-lock.sh"]
         volumeMounts:
         - name: creator-node-ipfs-pv
