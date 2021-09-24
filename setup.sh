@@ -39,6 +39,7 @@ EOF
 
 # kubeadm init
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+sudo kubeadm reset # reset because of kubeadm issues possibly to do with k8s version changes?
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
