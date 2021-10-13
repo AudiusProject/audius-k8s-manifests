@@ -23,6 +23,20 @@ const TYPES_SET = new Set(TYPES_ARR)
 const REQUEST_CONCURRENCY_LIMIT = 20
 const MAX_LIMIT = 500
 
+// Script usage:
+// node delistContent.js -a add -l 1,3,7 -t user
+// node delistContent.js -a add -l 1,3,7 -t track
+// node delistContent.js -a add -l Qm..., Qm..., -t cid
+
+// node delistContent.js -a remove -l 1,3,7 -t user
+// node delistContent.js -a remove -l 1,3,7 -t track
+// node delistContent.js -a remove -l Qm..., Qm..., -t cid
+
+// add -v flag to each script run to see the segments and number of segments touched
+
+// For help:
+// node delistContent.js --help
+
 /**
  * Process command line args and either add or remove an entry in/to ContentBlacklist table
  */
@@ -36,40 +50,44 @@ async function run () {
     return
   }
 
-  console.log('Updating Content Blacklist...\n')
+
+  console.log(`Updating Content Blacklist for ${CREATOR_NODE_ENDPOINT}...\n`)
   const { action, type, values, verbose } = args
-  try {
-    switch (action) {
-      case 'ADD': {
-        await addToContentBlacklist(type, values)
-        break
+  for (let i = 0; i < values.length; i += 10) {
+    const valuesSliced = values.slice(i, i + 10)
+    try {
+      switch (action) {
+        case 'ADD': {
+          await addToContentBlacklist(type, valuesSliced)
+          break
+        }
+        case 'REMOVE': {
+          await removeFromContentBlacklist(type, valuesSliced)
+          break
+        }
+        default: {
+          console.error('Should not have reached here :(')
+          return
+        }
       }
-      case 'REMOVE': {
-        await removeFromContentBlacklist(type, values)
-        break
-      }
-      default: {
-        console.error('Should not have reached here :(')
-        return
-      }
+    } catch (e) {
+      console.error(`Failed to perform [${action}] for [${type}]: ${e}`)
+      return
     }
-  } catch (e) {
-    console.error(`Failed to perform [${action}] for [${type}]: ${e}`)
-    return
-  }
 
-  console.log('Verifying content against blacklist...\n')
-  try {
-    const segments = await verifyWithBlacklist({ type, values, action })
+    console.log('Verifying content against blacklist...\n')
+    try {
+      const segments = await verifyWithBlacklist({ type, values: valuesSliced, action })
 
-    let successMsg = `Successfully performed [${action}] for type [${type}]!\nValues: [${values}]`
-    if (verbose) {
-      successMsg += `\nNumber of Segments: ${segments.length}`
-      successMsg += `\nSegments: ${segments}`
+      let successMsg = `Successfully performed [${action}] for type [${type}]!\values: [${valuesSliced}]`
+      if (verbose) {
+        successMsg += `\nNumber of Segments: ${segments.length}`
+        successMsg += `\nSegments: ${segments}`
+      }
+      console.log(successMsg)
+    } catch (e) {
+      console.error(`Verification check failed: ${e}`)
     }
-    console.log(successMsg)
-  } catch (e) {
-    console.error(`Verification check failed: ${e}`)
   }
 }
 
@@ -103,7 +121,7 @@ function parseEnvVarsAndArgs () {
     values = values.filter(id => !isNaN(id)).map(id => parseInt(id)).filter(id => id >= 0)
     if (values.length === 0) throw new Error('List of ids is not proper.')
     if (originalNumIds !== values.length) {
-      console.warn('Filterd out non-numeric ids from input. Please only pass integers!')
+      console.warn(`Filtered out non-numeric ids from input. Please only pass integers!`)
     }
   } else { // else will be CID
     // Parse cids and ensure they follow the pattern Qm...
@@ -112,7 +130,7 @@ function parseEnvVarsAndArgs () {
     values = values.filter(cid => cidRegex.test(cid))
     if (values.length === 0) throw new Error('List of cids is not proper.')
     if (orignalNumCIDs !== values.length) {
-      console.warn('Filtered out improper cids from input. Please only pass valid CIDs!')
+      console.warn(`Filtered out improper cids from input. Please only pass valid CIDs!`)
     }
   }
 
@@ -130,12 +148,14 @@ async function addToContentBlacklist (type, values) {
 
   let resp
   try {
-    resp = await axios({
-      url: `${CREATOR_NODE_ENDPOINT}/blacklist/add`,
-      method: 'post',
-      params: { type, values, timestamp, signature },
-      responseType: 'json'
-    })
+    const reqObj = {
+    url: `${CREATOR_NODE_ENDPOINT}/blacklist/add`,
+    method: 'post',
+    params: { type, values, timestamp, signature },
+    responseType: 'json'
+  }
+    console.log(`About to send axios request to ${reqObj.url} for values`, values)
+    resp = await axios(reqObj)
   } catch (e) {
     throw new Error(`Error with adding type [${type}] and values [${values}] to ContentBlacklist: ${e}`)
   }
@@ -175,7 +195,7 @@ async function removeFromContentBlacklist (type, values) {
  * @returns {string[]} all segments associated with input
  */
 async function verifyWithBlacklist ({ type, values, action }) {
-  const allSegments = await getSegments(type, values)
+  let allSegments = await getSegments(type, values)
 
   // Hit creator node /ipfs/:CID route to see if segment is blacklisted
   let checkFn, filterFn
@@ -284,7 +304,7 @@ async function getSegments (type, values) {
     }
     allSegments = allSegmentObjs.map(segmentObj => segmentObj.multihash)
   } catch (e) {
-    throw new Error(`Error with fetching segments for verifcation: ${e}`)
+    throw new Error(`Error with fetching segments for verification: ${e}`)
   }
   return allSegments
 }
