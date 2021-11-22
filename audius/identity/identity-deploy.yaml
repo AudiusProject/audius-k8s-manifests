@@ -37,9 +37,9 @@ spec:
           httpGet:
             path: /health_check
             port: 7000
-          initialDelaySeconds: 3
+          initialDelaySeconds: 10
           periodSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 20
         readinessProbe:
           httpGet:
             path: /health_check
