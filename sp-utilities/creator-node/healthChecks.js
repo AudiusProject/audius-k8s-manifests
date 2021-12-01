@@ -46,7 +46,7 @@ async function healthCheck () {
     `Signature should not be null or undefined`
   )
   assert.ok(
-    data.spOwnerWallet !== null && data.spOwnerWallet !== undefined,
+    data.data.spOwnerWallet !== null && data.data.spOwnerWallet !== undefined,
     `spOwnerWallet should not be null or undefined`
   )
   console.log('✓ Health check passed')
@@ -84,7 +84,6 @@ async function healthCheckDisk () {
   }
   let resp = await axios(requestConfig)
   let data = resp.data
-  console.log(data)
   assert.deepStrictEqual(resp.status, 200)
   assert.deepStrictEqual(data.data.storagePath, '/file_storage')
   const [size, magnitude] = data.data.available.split(' ')
