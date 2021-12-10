@@ -50,6 +50,11 @@ spec:
     spec:
       
       
+    spec:
+      securityContext:
+          fsGroup: 100
+          runAsUser: 1000
+          runAsGroup: 100
       containers:
       - name: creator-node-ipfs
         image: ipfs/go-ipfs:v0.9.1

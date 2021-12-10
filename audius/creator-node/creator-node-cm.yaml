@@ -21,7 +21,6 @@ data:
   dbConnectionPoolMax: "500"
   delegateOwnerWallet: "<SEE_README>"
   delegatePrivateKey: "<SEE_README>"
-  discoveryProviderWhitelist: ""
   ethNetworkId: "1"
   ethOwnerWallet: "0xe886a1858d2d368ef8f02c65bdd470396a1ab188"
   ethProviderUrl: "https://mainnet.infura.io/v3/a3ed533ddfca4c76ab4df7556e2745e1"
