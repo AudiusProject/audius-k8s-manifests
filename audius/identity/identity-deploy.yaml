@@ -37,17 +37,18 @@ spec:
           httpGet:
             path: /health_check
             port: 7000
-          initialDelaySeconds: 300
+          initialDelaySeconds: 5
           periodSeconds: 10
-          failureThreshold: 6
           timeoutSeconds: 10
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /health_check
             port: 7000
-          initialDelaySeconds: 300
+          initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 10
+          failureThreshold: 30
         
         command: ["sh", "-c", "exec node src/index.js"]
         
