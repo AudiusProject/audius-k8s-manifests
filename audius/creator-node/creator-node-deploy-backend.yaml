@@ -22,7 +22,7 @@ spec:
         tier: backend
         
       annotations:
-        checksum/config: 61e750bf426add753b49c81ec5d96474398e059358456a41034e432bacc5e239
+        checksum/config: e056c3880fdd14c9a79e43c9fb2f616b918e3fdfb3ff7981d9dabcd1fd522f95
     spec:
       
       
@@ -30,7 +30,7 @@ spec:
       - name: backend
         imagePullPolicy: Always
         
-        image: audius/creator-node:bf77d7d875d62b5bd7ebd85ae109b4030574b3ef
+        image: audius/creator-node:89aa525936bd1698cbd34dc354b2f557b897e0f4
         
         envFrom:
         - configMapRef:
@@ -52,9 +52,6 @@ spec:
             port: 4000
           initialDelaySeconds: 3
           periodSeconds: 3
-        
-        command: ["sh", "-c", "exec node src/index.js"]
-        
         volumeMounts:
         - mountPath: /file_storage
           name: creator-node-backend-pv
