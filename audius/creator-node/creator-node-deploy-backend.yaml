@@ -22,7 +22,7 @@ spec:
         tier: backend
         
       annotations:
-        checksum/config: e056c3880fdd14c9a79e43c9fb2f616b918e3fdfb3ff7981d9dabcd1fd522f95
+        checksum/config: 61e750bf426add753b49c81ec5d96474398e059358456a41034e432bacc5e239
     spec:
       
       
@@ -44,7 +44,7 @@ spec:
             port: 4000
           initialDelaySeconds: 3
           periodSeconds: 3
-          failureThreshold: 3
+          failureThreshold: 10
           timeoutSeconds: 30
         readinessProbe:
           httpGet:
@@ -52,6 +52,7 @@ spec:
             port: 4000
           initialDelaySeconds: 3
           periodSeconds: 3
+          failureThreshold: 10
         volumeMounts:
         - mountPath: /file_storage
           name: creator-node-backend-pv
