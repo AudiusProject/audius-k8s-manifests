@@ -18,7 +18,7 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: 25a9a4a893edf63fd8b8e802b93c7f6aa0f91c4c7b48b0813d57c8172207349a
+        checksum/config: 3e9dd12e34a046560200fefbfe23a4ae4bc12520b4df7397f1cfd934fea5e33b
     spec:
       
       
@@ -42,6 +42,7 @@ spec:
           periodSeconds: 10
           failureThreshold: 5
           timeoutSeconds: 6
+        
         
         command: ["sh", "-c", "./scripts/prod-server.sh"]
         
