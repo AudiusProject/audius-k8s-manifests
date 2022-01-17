@@ -18,7 +18,7 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: 7c9845f17adfa0e4299805a48848a3b382360b712b19d40fc7aeb25430c66caf
+        checksum/config: c7aeeed94f00dd302d1fa11d7c6f648f590f58cf8d1c77e992a576028f1c1269
     spec:
       
       

@@ -30,6 +30,7 @@ data:
   audius_eth_contracts_registry: "0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C"
   audius_gunicorn_worker_class: "eventlet"
   audius_gunicorn_workers: "16"
+  audius_no_workers: "true"
   audius_solana_endpoint: "https://audius.rpcpool.com/4d12c27ad978e40c1b0f8449b93c"
   audius_solana_rewards_manager_account: "71hWFVYokLaN1PNYzTAWi13EfJ7Xt9VbSWUKsXUT8mxE"
   audius_solana_rewards_manager_min_slot: "0"
