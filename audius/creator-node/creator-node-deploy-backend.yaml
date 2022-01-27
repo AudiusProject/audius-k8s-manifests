@@ -30,7 +30,7 @@ spec:
       - name: backend
         imagePullPolicy: Always
         
-        image: audius/creator-node:a5c4f070599721708e526e033f4857e5878ec943
+        image: audius/creator-node:64c597772eb76e206f587e0ce2b0f1d302dcaaa3
         
         envFrom:
         - configMapRef:
