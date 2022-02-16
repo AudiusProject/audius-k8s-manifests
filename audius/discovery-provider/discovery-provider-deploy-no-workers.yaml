@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:290de77ad35f24f0e4be7a78cc65c5ffbb7cfd65
+        image: audius/discovery-provider:1f0fc66a3d95e944bb342ab9537705e632d31f2c
         
         envFrom:
         - configMapRef:
@@ -107,9 +107,9 @@ spec:
         image: postgres:11.4
         args:
           - -c
-          - shared_buffers=256MB
+          - shared_buffers=512MB
           - -c
-          - max_connections=300
+          - max_connections=500
           - -c
           - shared_preload_libraries=pg_stat_statements
         envFrom:
