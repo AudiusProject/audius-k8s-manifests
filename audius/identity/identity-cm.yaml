@@ -14,6 +14,7 @@ data:
   redisPort: "6379"
   aaoAddress: "0x9811BA3eAB1F2Cd9A2dFeDB19e8c2a69729DC8b6"
   aaoEndpoint: "https://antiabuseoracle.audius.co"
+  amplitudeAPIKey: "86760558b8bb1b3aae61656efd4ddacb"
   blacklisterPublicKey: "0xfeebEA99dE524ac668B6f151177EcA60b30A09c9"
   cognitoBaseUrl: "https://api.cognitohq.com"
   cognitoTemplateId: "flwtmp_eMMe8VQGrKvLCX"
