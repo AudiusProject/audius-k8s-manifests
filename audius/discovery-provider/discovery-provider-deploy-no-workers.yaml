@@ -18,7 +18,7 @@ spec:
         release: discovery-provider
         tier: backend
       annotations:
-        checksum/config: c7aeeed94f00dd302d1fa11d7c6f648f590f58cf8d1c77e992a576028f1c1269
+        checksum/config: cad7f33abd0c369d83d925fa4e171d70eb3491292d57c672cd92c80e3029cf5c
     spec:
       
       
@@ -26,7 +26,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:3390f9dfa8940124bfecf0bf6d1343c4080db112
+        image: audius/discovery-provider:7f8cbd779714c6799d6e322aa7e29a2dca1c833c
         
         envFrom:
         - configMapRef:
@@ -136,65 +136,6 @@ spec:
 ---
 # Source: audius-discovery-provider/templates/ipfs-deploy.yaml
 
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: discovery-provider-ipfs
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      release: discovery-provider
-      tier: ipfs
-      
-  replicas: 1
-  
-  template:
-    metadata:
-      labels:
-        release: discovery-provider
-        tier: ipfs
-        
-      annotations:
-        checksum/config: 2c3c0976bd0ded5df1835e1e093b20769ec8e20378de4be0ef0a85dc50e15730
-    spec:
-      
-      
-      containers:
-      - name: discovery-provider-ipfs
-        image: ipfs/go-ipfs:v0.9.1
-        ports:
-        - name: swarm
-          containerPort: 4001
-        - name: api
-          containerPort: 5001
-        - name: http
-          containerPort: 8080
-        volumeMounts:
-        - name: discovery-provider-ipfs-pv
-          mountPath: /data/ipfs
-          subPath: discovery-provider-ipfs
-      initContainers:
-      - name: init
-        image: ipfs/go-ipfs:v0.9.1
-        command: ["sh", "/scripts/ipfs-remove-lock.sh"]
-        volumeMounts:
-        - name: discovery-provider-ipfs-pv
-          mountPath: /data/ipfs
-          subPath: discovery-provider-ipfs
-        - name: ipfs-cm
-          mountPath: /scripts/ipfs-remove-lock.sh
-          subPath: ipfs-remove-lock.sh
-      volumes:
-      - name: discovery-provider-ipfs-pv
-        
-        persistentVolumeClaim:
-          claimName: discovery-provider-ipfs-pvc
-        
-      - name: ipfs-cm
-        configMap:
-          name: discovery-provider-ipfs-cm
 
 
 

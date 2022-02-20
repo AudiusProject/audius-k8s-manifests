@@ -53,25 +53,4 @@ spec:
 ---
 # Source: audius-discovery-provider/templates/ipfs-svc.yaml
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: discovery-provider-ipfs-svc
-  namespace: default
-spec:
-  type: NodePort
-  ports:
-  - port: 4001
-    name: swarm
-    protocol: TCP
-  - port: 5001
-    name: api
-    protocol: TCP
-  - port: 8080
-    name: http
-    protocol: TCP
-  selector:
-    release: discovery-provider
-    tier: ipfs
-
 
