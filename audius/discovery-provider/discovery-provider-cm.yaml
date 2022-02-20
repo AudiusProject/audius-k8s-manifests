@@ -7,8 +7,6 @@ metadata:
   name: discovery-provider-backend-cm
   namespace: default
 data:
-  audius_ipfs_host: "discovery-provider-ipfs-svc.default.svc.cluster.local"
-  audius_ipfs_port: "5001"
   
   audius_db_url: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
   audius_db_url_read_replica: "postgresql+psycopg2://postgres:postgres@discovery-provider-db-svc.default.svc.cluster.local:5432/audius_discovery"
