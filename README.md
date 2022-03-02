@@ -78,8 +78,6 @@ kubernetes                       ClusterIP   10.96.0.1       <none>        443/T
 In this case, the web server port is 31744 and the IPFS port is 30480.
 ```
 
-<b>Note - discovery-node doesn't use IPFS, only content-node does</b>
-
 2.) Once you expose these ports, you should be able to publicly hit the health check via the public IP of your instance or load balancer. The next step is to register a DNS record. It's recommended that you map the web server port the DNS and have a domain or subdomain for each service you're running. Also make sure traffic is not allowed without HTTPS. All non HTTPS traffic should redirect to the HTTPS port.
 
 3.) Now we will configure IPFS.
@@ -267,7 +265,7 @@ Make sure that your service exposes all the required environment variables. See 
 
 ### Launch
 ```sh
-audius-cli launch discovery-provider --seed-job
+audius-cli launch discovery-provider --seed-job --configure-ipfs
 ```
 
 Verify that the service is healthy by running,
