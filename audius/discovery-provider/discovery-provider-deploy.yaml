@@ -20,8 +20,11 @@ spec:
       annotations:
         checksum/config: cad7f33abd0c369d83d925fa4e171d70eb3491292d57c672cd92c80e3029cf5c
     spec:
-      
-      
+
+      volumes:
+      - name: prometheus-data
+        emptyDir: {}
+
       containers:
       - name: server
         imagePullPolicy: Always
@@ -42,8 +45,11 @@ spec:
           periodSeconds: 10
           failureThreshold: 5
           timeoutSeconds: 6
-        
-        
+
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus_data
+
         command: ["sh", "-c", "./scripts/start.sh"]
         
         
@@ -58,7 +64,12 @@ spec:
         
         ports:
         - containerPort: 5000
-        command: ["sh", "-c", "celery -A src.worker.celery worker --loglevel info"]
+
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus_data
+
+        command: ["sh", "-c", "./scripts/start-worker.sh"]
       - name: beat
         imagePullPolicy: Always
         
