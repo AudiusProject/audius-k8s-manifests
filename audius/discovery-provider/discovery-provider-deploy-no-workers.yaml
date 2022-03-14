@@ -22,6 +22,9 @@ spec:
     spec:
       
       
+      volumes:
+      - name: prometheus-data
+        emptyDir: {}
       containers:
       - name: server
         imagePullPolicy: Always
@@ -46,7 +49,9 @@ spec:
         
         command: ["sh", "-c", "./scripts/prod-server.sh"]
         
-        
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus_data
       
 
 
