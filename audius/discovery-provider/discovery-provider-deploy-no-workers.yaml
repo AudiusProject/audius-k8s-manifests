@@ -22,11 +22,14 @@ spec:
     spec:
       
       
+      volumes:
+      - name: prometheus-data
+        emptyDir: {}
       containers:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:45c13a62bd86e0f5d7b71843c52aa06c4ff5256c
+        image: audius/discovery-provider:257b60f2ff0b990138d08e618b4e364e3b27b6d7
         
         envFrom:
         - configMapRef:
@@ -46,7 +49,9 @@ spec:
         
         command: ["sh", "-c", "./scripts/prod-server.sh"]
         
-        
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus_data
       
 
 
