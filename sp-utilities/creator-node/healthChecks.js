@@ -63,19 +63,6 @@ async function healthCheckDB () {
   console.log('✓ DB health check passed')
 }
 
-async function healthCheckIPFS () {
-  let requestConfig = {
-    url: `${CREATOR_NODE_ENDPOINT}/health_check/ipfs`,
-    method: 'get',
-    responseType: 'json'
-  }
-  let resp = await axios(requestConfig)
-  let data = resp.data
-  assert.deepStrictEqual(resp.status, 200)
-  assert.deepStrictEqual(data.data.hash.includes('Qm'), true)
-  console.log('✓ IPFS health check passed')
-}
-
 async function healthCheckDisk () {
   let requestConfig = {
     url: `${CREATOR_NODE_ENDPOINT}/disk_check`,
@@ -216,7 +203,6 @@ async function run () {
   try {
     console.log(`Starting tests now. This may take a few minutes.`)
     await healthCheck()
-    await healthCheckIPFS()
     await healthCheckDB()
     await healthCheckDisk()
     await healthCheckDurationHeartbeat()
