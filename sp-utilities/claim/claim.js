@@ -4,6 +4,7 @@ const HDWalletProvider = require('@truffle/hdwallet-provider')
 const { program } = require('commander')
 
 const audius = require('@audius/libs')
+const { transferCommunityRewardsToSolana } = require('@audius/libs/scripts/communityRewards/transferCommunityRewardsToSolana')
 
 const defaultRegistryAddress = '0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C'
 const defaultTokenAddress = '0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998'
@@ -51,7 +52,7 @@ async function getDelegateManagerContract(ethRegistryAddress, ethTokenAddress, w
   )
 }
 
-async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, web3Provider, gas, gasPrice }) {
+async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, web3Provider, gas, gasPrice, transferRewardsToSolana }) {
   const web3 = new Web3(
     new HDWalletProvider({
       privateKeys: [privateKey],
@@ -82,6 +83,11 @@ async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, 
     gasPrice: gasPrice ? web3.utils.toWei(gasPrice, 'gwei') : (await getGasPrice()),
   })
   console.log('Successfully initiated Round')
+  if (transferRewardsToSolana) {
+    console.log('Running rewards manager transfer')
+    await transferCommunityRewardsToSolana()
+    console.log('Successfully transferred rewards to solana')
+  }
 }
 
 async function claimRewards(
@@ -124,8 +130,9 @@ async function main() {
     .option('--eth-registry-address <ethRegistryAddress>', 'Registry contract address', defaultRegistryAddress)
     .option('--eth-token-address <ethTokenAddress>', 'Token contract address', defaultTokenAddress)
     .option('--web3-provider <web3Provider>', 'Web3 provider to use', defaultWeb3Provider)
-    .option('--gas <gas>', 'ammount of gas to use', 100000)
+    .option('--gas <gas>', 'amount of gas to use', 100000)
     .option('--gas-price <gasPrice>', 'gas price in gwei')
+    .option('--transfer-rewards-to-solana', 'whether to also transfer rewards to solana rewards manager on success. Requires env vars to be set.', false)
     .action(initiateRound)
 
   program

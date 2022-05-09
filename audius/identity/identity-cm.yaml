@@ -31,7 +31,7 @@ data:
   relayerPublicKey: "0xdead88167Bd06Cbc251FB8336B44259c6407dd07"
   rewardsParallelization: "10"
   rewardsQuorumSize: "3"
-  secondaryWeb3Provider: "https://core.poa.network"
+  secondaryWeb3Provider: ""
   solBridgeAddress: "worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth"
   solTokenBridgeAddress: "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb"
   solanaClaimableTokenProgramAddress: "Ewkv3JahEFRKkcJmpoKB7pXbnUHwjAyXiwEo4ZY2rezQ"
