@@ -18,7 +18,7 @@ spec:
         release: identity
         tier: backend
       annotations:
-        checksum/config: 000375b423f713f22443227e6bb771bfa0dafa4c0cfbce5a926fe7d41897eb89
+        checksum/config: e509c1ad12acd18ac3bbbef35c20293a4807f1c4ac2fc3b368e63d93e7966aa6
     spec:
       
       containers:
