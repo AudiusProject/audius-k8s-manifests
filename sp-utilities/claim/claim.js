@@ -4,7 +4,6 @@ const HDWalletProvider = require('@truffle/hdwallet-provider')
 const { program } = require('commander')
 
 const audius = require('@audius/libs')
-const { transferCommunityRewardsToSolana } = require('@audius/libs/scripts/communityRewards/transferCommunityRewardsToSolana')
 
 const defaultRegistryAddress = '0xd976d3b4f4e22a238c1A736b6612D22f17b6f64C'
 const defaultTokenAddress = '0x18aAA7115705e8be94bfFEBDE57Af9BFc265B998'
@@ -84,6 +83,7 @@ async function initiateRound(privateKey, { ethRegistryAddress, ethTokenAddress, 
   })
   console.log('Successfully initiated Round')
   if (transferRewardsToSolana) {
+    const { transferCommunityRewardsToSolana } = require('@audius/libs/scripts/communityRewards/transferCommunityRewardsToSolana')
     console.log('Running rewards manager transfer')
     await transferCommunityRewardsToSolana()
     console.log('Successfully transferred rewards to solana')
