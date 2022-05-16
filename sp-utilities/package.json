@@ -6,7 +6,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@audius/libs": "^1.2.92-auto-rewards-transfer.0",
+    "@audius/libs": "1.2.116",
     "@truffle/hdwallet-provider": "^1.2.2",
     "axios": "^0.21.0",
     "commander": "^6.2.1",
