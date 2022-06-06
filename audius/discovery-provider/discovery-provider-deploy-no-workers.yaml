@@ -29,7 +29,7 @@ spec:
       - name: server
         imagePullPolicy: Always
         
-        image: audius/discovery-provider:ad9e077c71f845514a562da8e127a17c14d8c494
+        image: audius/discovery-provider:87783c89cb5cd9b9812857ed9a1eec63570acb27
         
         envFrom:
         - configMapRef:

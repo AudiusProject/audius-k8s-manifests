@@ -25,7 +25,7 @@ spec:
       - name: identity-backend
         imagePullPolicy: Always
         
-        image: audius/identity-service:96517412a87868f4ac3e2ea5ce255fb7e828731b
+        image: audius/identity-service:87783c89cb5cd9b9812857ed9a1eec63570acb27
         
         envFrom:
         - configMapRef:
